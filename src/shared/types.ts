@@ -1,78 +1,78 @@
 export interface Repository {
-  id: string
-  path: string
-  name: string
-  enabled: boolean
-  order: number
-  createdAt: string
-  updatedAt: string
+  id: string;
+  path: string;
+  name: string;
+  enabled: boolean;
+  order: number;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface PullRequest {
-  id: string
-  repositoryId: string
-  repositoryName: string
-  prNumber: number
-  title: string
-  url: string
-  author: string
-  createdAt: string
-  firstSeenAt: string
-  notifiedAt: string | null
-  lastRemindedAt: string | null
+  id: string;
+  repositoryId: string;
+  repositoryName: string;
+  prNumber: number;
+  title: string;
+  url: string;
+  author: string;
+  createdAt: string;
+  firstSeenAt: string;
+  notifiedAt: string | null;
+  lastRemindedAt: string | null;
 }
 
 export interface Settings {
-  notifyOnNew: boolean
-  enableReminder: boolean
-  reminderIntervalHours: number
-  checkIntervalMinutes: number
+  notifyOnNew: boolean;
+  enableReminder: boolean;
+  reminderIntervalHours: number;
+  checkIntervalMinutes: number;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
   notifyOnNew: true,
   enableReminder: true,
   reminderIntervalHours: 1,
-  checkIntervalMinutes: 5
-}
+  checkIntervalMinutes: 5,
+};
 
 export interface IpcApi {
   // Repository
-  listRepositories(): Promise<Repository[]>
-  addRepository(path: string): Promise<Repository>
-  removeRepository(id: string): Promise<void>
-  toggleRepository(id: string, enabled: boolean): Promise<void>
-  reorderRepositories(ids: string[]): Promise<void>
+  listRepositories(): Promise<Repository[]>;
+  addRepository(path: string): Promise<Repository>;
+  removeRepository(id: string): Promise<void>;
+  toggleRepository(id: string, enabled: boolean): Promise<void>;
+  reorderRepositories(ids: string[]): Promise<void>;
 
   // Settings
-  getSettings(): Promise<Settings>
-  setSettings(settings: Settings): Promise<void>
+  getSettings(): Promise<Settings>;
+  setSettings(settings: Settings): Promise<void>;
 
   // Pull Requests
-  listPullRequests(): Promise<PullRequest[]>
-  refreshPullRequests(): Promise<PullRequest[]>
-  openPullRequest(url: string): Promise<void>
+  listPullRequests(): Promise<PullRequest[]>;
+  refreshPullRequests(): Promise<PullRequest[]>;
+  openPullRequest(url: string): Promise<void>;
 
   // Windows
-  openSettings(): Promise<void>
-  quitApp(): Promise<void>
+  openSettings(): Promise<void>;
+  quitApp(): Promise<void>;
 
   // Events
-  onPullRequestsUpdated(callback: (prs: PullRequest[]) => void): () => void
+  onPullRequestsUpdated(callback: (prs: PullRequest[]) => void): () => void;
 }
 
 export const IPC_CHANNELS = {
-  REPO_LIST: 'repo:list',
-  REPO_ADD: 'repo:add',
-  REPO_REMOVE: 'repo:remove',
-  REPO_TOGGLE: 'repo:toggle',
-  REPO_REORDER: 'repo:reorder',
-  SETTINGS_GET: 'settings:get',
-  SETTINGS_SET: 'settings:set',
-  PR_LIST: 'pr:list',
-  PR_REFRESH: 'pr:refresh',
-  PR_OPEN: 'pr:open',
-  PR_UPDATED: 'pr:updated',
-  OPEN_SETTINGS: 'window:open-settings',
-  QUIT_APP: 'app:quit'
-} as const
+  REPO_LIST: "repo:list",
+  REPO_ADD: "repo:add",
+  REPO_REMOVE: "repo:remove",
+  REPO_TOGGLE: "repo:toggle",
+  REPO_REORDER: "repo:reorder",
+  SETTINGS_GET: "settings:get",
+  SETTINGS_SET: "settings:set",
+  PR_LIST: "pr:list",
+  PR_REFRESH: "pr:refresh",
+  PR_OPEN: "pr:open",
+  PR_UPDATED: "pr:updated",
+  OPEN_SETTINGS: "window:open-settings",
+  QUIT_APP: "app:quit",
+} as const;

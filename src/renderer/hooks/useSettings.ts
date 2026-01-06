@@ -1,52 +1,54 @@
-import { useState, useEffect, useCallback } from 'react'
-import type { Settings } from '../../shared/types'
-import { DEFAULT_SETTINGS } from '../../shared/types'
+import { useCallback, useEffect, useState } from "react";
+import type { Settings } from "../../shared/types";
+import { DEFAULT_SETTINGS } from "../../shared/types";
 
 interface UseSettingsReturn {
-  settings: Settings
-  loading: boolean
-  error: string | null
-  updateSettings: (newSettings: Settings) => Promise<void>
-  refresh: () => Promise<void>
+  settings: Settings;
+  loading: boolean;
+  error: string | null;
+  updateSettings: (newSettings: Settings) => Promise<void>;
+  refresh: () => Promise<void>;
 }
 
 export function useSettings(): UseSettingsReturn {
-  const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
     try {
-      setLoading(true)
-      setError(null)
-      const loadedSettings = await window.api.getSettings()
-      setSettings(loadedSettings)
+      setLoading(true);
+      setError(null);
+      const loadedSettings = await window.api.getSettings();
+      setSettings(loadedSettings);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load settings')
+      setError(err instanceof Error ? err.message : "Failed to load settings");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }, [])
+  }, []);
 
   useEffect(() => {
-    refresh()
-  }, [refresh])
+    refresh();
+  }, [refresh]);
 
   const updateSettings = useCallback(async (newSettings: Settings) => {
     try {
-      setError(null)
-      await window.api.setSettings(newSettings)
-      setSettings(newSettings)
+      setError(null);
+      await window.api.setSettings(newSettings);
+      setSettings(newSettings);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to update settings')
+      setError(
+        err instanceof Error ? err.message : "Failed to update settings",
+      );
     }
-  }, [])
+  }, []);
 
   return {
     settings,
     loading,
     error,
     updateSettings,
-    refresh
-  }
+    refresh,
+  };
 }

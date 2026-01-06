@@ -1,31 +1,41 @@
-import { PullRequestList } from '../components/PullRequestList'
-import { usePullRequests } from '../hooks/usePullRequests'
+import { PullRequestList } from "../components/PullRequestList";
+import { usePullRequests } from "../hooks/usePullRequests";
 
 function formatTime(date: Date): string {
   return date.toLocaleTimeString(undefined, {
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit'
-  })
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  });
 }
 
 export default function MainPage(): JSX.Element {
-  const { pullRequests, repositories, loading, error, refresh, openPullRequest, lastUpdated } = usePullRequests()
+  const {
+    pullRequests,
+    repositories,
+    loading,
+    error,
+    refresh,
+    openPullRequest,
+    lastUpdated,
+  } = usePullRequests();
 
   const handleOpenSettings = (): void => {
-    window.api.openSettings()
-  }
+    window.api.openSettings();
+  };
 
   const handleQuit = (): void => {
-    window.api.quitApp()
-  }
+    window.api.quitApp();
+  };
 
   return (
     <div className="min-h-screen flex flex-col bg-white rounded-lg shadow-xl border border-gray-200 overflow-hidden">
       {/* Header */}
       <header className="bg-gray-50 border-b border-gray-200 px-3 py-2 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <h1 className="text-sm font-semibold text-gray-700">Pending Reviews</h1>
+          <h1 className="text-sm font-semibold text-gray-700">
+            Pending Reviews
+          </h1>
           <span className="text-xs text-gray-400 bg-gray-200 px-2 py-0.5 rounded-full">
             {pullRequests.length}
           </span>
@@ -37,7 +47,12 @@ export default function MainPage(): JSX.Element {
             className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-200 rounded transition-colors"
             title="Settings"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -58,7 +73,12 @@ export default function MainPage(): JSX.Element {
             className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-gray-200 rounded transition-colors"
             title="Quit"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -83,26 +103,30 @@ export default function MainPage(): JSX.Element {
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
           </div>
         ) : (
-          <PullRequestList pullRequests={pullRequests} repositories={repositories} onOpenPR={openPullRequest} />
+          <PullRequestList
+            pullRequests={pullRequests}
+            repositories={repositories}
+            onOpenPR={openPullRequest}
+          />
         )}
       </main>
 
       {/* Footer */}
       <footer className="bg-white border-t border-gray-200 px-4 py-2 flex items-center justify-between">
         <span className="text-xs text-gray-500">
-          {lastUpdated ? `Last updated: ${formatTime(lastUpdated)}` : ''}
+          {lastUpdated ? `Last updated: ${formatTime(lastUpdated)}` : ""}
         </span>
         <button
           onClick={refresh}
           disabled={loading}
           className={`inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
             loading
-              ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-              : 'bg-blue-50 text-blue-600 hover:bg-blue-100'
+              ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+              : "bg-blue-50 text-blue-600 hover:bg-blue-100"
           }`}
         >
           <svg
-            className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`}
+            className={`w-4 h-4 ${loading ? "animate-spin" : ""}`}
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -118,5 +142,5 @@ export default function MainPage(): JSX.Element {
         </button>
       </footer>
     </div>
-  )
+  );
 }

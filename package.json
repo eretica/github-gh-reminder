@@ -12,7 +12,8 @@
     "build:mac": "electron-vite build && electron-builder --mac",
     "build:win": "electron-vite build && electron-builder --win",
     "build:linux": "electron-vite build && electron-builder --linux",
-    "lint": "eslint . --ext .ts,.tsx",
+    "lint": "biome check",
+    "lint:fix": "biome check --write",
     "typecheck": "tsc --noEmit",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate"
@@ -28,6 +29,7 @@
     "uuid": "^10.0.0"
   },
   "devDependencies": {
+    "@biomejs/biome": "^2.3.11",
     "@electron-toolkit/preload": "^3.0.1",
     "@electron-toolkit/utils": "^3.0.0",
     "@electron/rebuild": "^4.0.2",
@@ -42,7 +44,6 @@
     "electron": "^32.0.2",
     "electron-builder": "^25.0.5",
     "electron-vite": "^2.3.0",
-    "eslint": "^9.10.0",
     "postcss": "^8.4.45",
     "tailwindcss": "^3.4.10",
     "typescript": "^5.5.4",

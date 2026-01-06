@@ -1,83 +1,93 @@
-import { useState, useEffect, useCallback } from 'react'
-import type { Repository } from '../../shared/types'
+import { useCallback, useEffect, useState } from "react";
+import type { Repository } from "../../shared/types";
 
 interface UseRepositoriesReturn {
-  repositories: Repository[]
-  loading: boolean
-  error: string | null
-  addRepository: () => Promise<void>
-  removeRepository: (id: string) => Promise<void>
-  toggleRepository: (id: string, enabled: boolean) => Promise<void>
-  reorderRepositories: (ids: string[]) => Promise<void>
-  refresh: () => Promise<void>
+  repositories: Repository[];
+  loading: boolean;
+  error: string | null;
+  addRepository: () => Promise<void>;
+  removeRepository: (id: string) => Promise<void>;
+  toggleRepository: (id: string, enabled: boolean) => Promise<void>;
+  reorderRepositories: (ids: string[]) => Promise<void>;
+  refresh: () => Promise<void>;
 }
 
 export function useRepositories(): UseRepositoriesReturn {
-  const [repositories, setRepositories] = useState<Repository[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [repositories, setRepositories] = useState<Repository[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
     try {
-      setLoading(true)
-      setError(null)
-      const repos = await window.api.listRepositories()
-      setRepositories(repos)
+      setLoading(true);
+      setError(null);
+      const repos = await window.api.listRepositories();
+      setRepositories(repos);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load repositories')
+      setError(
+        err instanceof Error ? err.message : "Failed to load repositories",
+      );
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }, [])
+  }, []);
 
   useEffect(() => {
-    refresh()
-  }, [refresh])
+    refresh();
+  }, [refresh]);
 
   const addRepository = useCallback(async () => {
     try {
-      setError(null)
-      const repo = await window.api.addRepository('')
+      setError(null);
+      const repo = await window.api.addRepository("");
       if (repo) {
-        setRepositories((prev) => [...prev, repo])
+        setRepositories((prev) => [...prev, repo]);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to add repository')
+      setError(err instanceof Error ? err.message : "Failed to add repository");
     }
-  }, [])
+  }, []);
 
   const removeRepository = useCallback(async (id: string) => {
     try {
-      setError(null)
-      await window.api.removeRepository(id)
-      setRepositories((prev) => prev.filter((r) => r.id !== id))
+      setError(null);
+      await window.api.removeRepository(id);
+      setRepositories((prev) => prev.filter((r) => r.id !== id));
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to remove repository')
+      setError(
+        err instanceof Error ? err.message : "Failed to remove repository",
+      );
     }
-  }, [])
+  }, []);
 
   const toggleRepository = useCallback(async (id: string, enabled: boolean) => {
     try {
-      setError(null)
-      await window.api.toggleRepository(id, enabled)
-      setRepositories((prev) => prev.map((r) => (r.id === id ? { ...r, enabled } : r)))
+      setError(null);
+      await window.api.toggleRepository(id, enabled);
+      setRepositories((prev) =>
+        prev.map((r) => (r.id === id ? { ...r, enabled } : r)),
+      );
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to toggle repository')
+      setError(
+        err instanceof Error ? err.message : "Failed to toggle repository",
+      );
     }
-  }, [])
+  }, []);
 
   const reorderRepositories = useCallback(async (ids: string[]) => {
     try {
-      setError(null)
-      await window.api.reorderRepositories(ids)
+      setError(null);
+      await window.api.reorderRepositories(ids);
       setRepositories((prev) => {
-        const repoMap = new Map(prev.map((r) => [r.id, r]))
-        return ids.map((id, index) => ({ ...repoMap.get(id)!, order: index }))
-      })
+        const repoMap = new Map(prev.map((r) => [r.id, r]));
+        return ids.map((id, index) => ({ ...repoMap.get(id)!, order: index }));
+      });
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to reorder repositories')
+      setError(
+        err instanceof Error ? err.message : "Failed to reorder repositories",
+      );
     }
-  }, [])
+  }, []);
 
   return {
     repositories,
@@ -87,6 +97,6 @@ export function useRepositories(): UseRepositoriesReturn {
     removeRepository,
     toggleRepository,
     reorderRepositories,
-    refresh
-  }
+    refresh,
+  };
 }

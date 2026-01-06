@@ -1,26 +1,26 @@
 import {
-  DndContext,
   closestCenter,
+  DndContext,
+  type DragEndEvent,
   KeyboardSensor,
   PointerSensor,
   useSensor,
   useSensors,
-  type DragEndEvent
-} from '@dnd-kit/core'
+} from "@dnd-kit/core";
 import {
   SortableContext,
   sortableKeyboardCoordinates,
-  verticalListSortingStrategy
-} from '@dnd-kit/sortable'
-import { RepositoryItem } from './RepositoryItem'
-import type { Repository } from '../../shared/types'
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import type { Repository } from "../../shared/types";
+import { RepositoryItem } from "./RepositoryItem";
 
 interface RepositoryListProps {
-  repositories: Repository[]
-  onToggle: (id: string, enabled: boolean) => void
-  onRemove: (id: string) => void
-  onReorder: (ids: string[]) => void
-  onAdd: () => void
+  repositories: Repository[];
+  onToggle: (id: string, enabled: boolean) => void;
+  onRemove: (id: string) => void;
+  onReorder: (ids: string[]) => void;
+  onAdd: () => void;
 }
 
 export function RepositoryList({
@@ -28,40 +28,52 @@ export function RepositoryList({
   onToggle,
   onRemove,
   onReorder,
-  onAdd
+  onAdd,
 }: RepositoryListProps): JSX.Element {
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates
-    })
-  )
+      coordinateGetter: sortableKeyboardCoordinates,
+    }),
+  );
 
   const handleDragEnd = (event: DragEndEvent): void => {
-    const { active, over } = event
+    const { active, over } = event;
 
     if (over && active.id !== over.id) {
-      const oldIndex = repositories.findIndex((r) => r.id === active.id)
-      const newIndex = repositories.findIndex((r) => r.id === over.id)
+      const oldIndex = repositories.findIndex((r) => r.id === active.id);
+      const newIndex = repositories.findIndex((r) => r.id === over.id);
 
-      const newOrder = [...repositories]
-      const [removed] = newOrder.splice(oldIndex, 1)
-      newOrder.splice(newIndex, 0, removed)
+      const newOrder = [...repositories];
+      const [removed] = newOrder.splice(oldIndex, 1);
+      newOrder.splice(newIndex, 0, removed);
 
-      onReorder(newOrder.map((r) => r.id))
+      onReorder(newOrder.map((r) => r.id));
     }
-  }
+  };
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-medium text-gray-700">Registered Repositories</h3>
+        <h3 className="text-sm font-medium text-gray-700">
+          Registered Repositories
+        </h3>
         <button
           onClick={onAdd}
           className="inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors"
         >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M12 4v16m8-8H4"
+            />
           </svg>
           Add
         </button>
@@ -69,7 +81,12 @@ export function RepositoryList({
 
       {repositories.length === 0 ? (
         <div className="text-center py-8 text-gray-500">
-          <svg className="w-12 h-12 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg
+            className="w-12 h-12 mx-auto mb-3 text-gray-300"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -78,11 +95,20 @@ export function RepositoryList({
             />
           </svg>
           <p>No repositories registered</p>
-          <p className="text-sm mt-1">Click "Add" to register a Git repository</p>
+          <p className="text-sm mt-1">
+            Click "Add" to register a Git repository
+          </p>
         </div>
       ) : (
-        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-          <SortableContext items={repositories.map((r) => r.id)} strategy={verticalListSortingStrategy}>
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
+        >
+          <SortableContext
+            items={repositories.map((r) => r.id)}
+            strategy={verticalListSortingStrategy}
+          >
             <div className="space-y-2">
               {repositories.map((repo) => (
                 <RepositoryItem
@@ -97,5 +123,5 @@ export function RepositoryList({
         </DndContext>
       )}
     </div>
-  )
+  );
 }
