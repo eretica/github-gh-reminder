@@ -65,6 +65,8 @@ export function createMainWindow(): BrowserWindow {
     }
   })
 
+  mainWindow.setVisibleOnAllWorkspaces(true)
+
   mainWindow.on('ready-to-show', () => {
     mainWindow?.show()
   })
