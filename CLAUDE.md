@@ -20,7 +20,7 @@ ipcMain.handle('data:fetch', async () => {
 });
 
 // Renderer Process
-const data = await window.electron.ipcRenderer.invoke('data:fetch');
+const data = await window.api.fetchData();
 
 // ❌ Bad: Don't expose nodeIntegration to renderer
 const window = new BrowserWindow({
@@ -44,13 +44,13 @@ export interface IpcApi {
   saveData: (data: Data) => Promise<void>;
 }
 
-contextBridge.exposeInMainWorld('electron', {
+contextBridge.exposeInMainWorld('api', {
   getData: () => ipcRenderer.invoke('data:get'),
   saveData: (data) => ipcRenderer.invoke('data:save', data),
 } as IpcApi);
 
 // ❌ Bad: Exposing raw ipcRenderer
-contextBridge.exposeInMainWorld('electron', {
+contextBridge.exposeInMainWorld('api', {
   ipcRenderer: ipcRenderer, // Insecure!
 });
 ```
@@ -60,27 +60,32 @@ contextBridge.exposeInMainWorld('electron', {
 
 **Best Practices**:
 ```typescript
-// ✅ Good: Manage tray lifecycle properly
-class TrayManager {
-  private tray: Tray | null = null;
+// ✅ Good: Manage tray lifecycle properly with module-level variable
+let tray: Tray | null = null;
 
-  create() {
-    this.tray = new Tray(iconPath);
-    this.tray.setContextMenu(this.buildMenu());
+export function createTray(): Tray {
+  if (tray) return tray;
 
-    // Prevent garbage collection
-    app.on('before-quit', () => {
-      this.destroy();
-    });
-  }
+  tray = new Tray(createTrayIcon());
+  tray.setToolTip('PR Reminder');
 
-  destroy() {
-    if (this.tray) {
-      this.tray.destroy();
-      this.tray = null;
-    }
+  // Handle tray click
+  tray.on('click', (_event, bounds) => {
+    setTrayBounds(bounds);
+    createMainWindow();
+  });
+
+  return tray;
+}
+
+export function destroyTray(): void {
+  if (tray) {
+    tray.destroy();
+    tray = null;
   }
 }
+
+// Call destroyTray() from app.on('before-quit') or app.on('will-quit')
 
 // ❌ Bad: Not handling tray lifecycle
 const tray = new Tray(iconPath); // Can be garbage collected
@@ -91,19 +96,32 @@ const tray = new Tray(iconPath); // Can be garbage collected
 
 **Best Practices**:
 ```typescript
-// ✅ Good: Reuse windows when possible
-class WindowManager {
-  private windows = new Map<string, BrowserWindow>();
+// ✅ Good: Reuse windows when possible (singleton pattern)
+let mainWindow: BrowserWindow | null = null;
 
-  show(name: string) {
-    let window = this.windows.get(name);
-    if (!window || window.isDestroyed()) {
-      window = this.createWindow(name);
-      this.windows.set(name, window);
-    }
-    window.show();
-    window.focus();
+export function createMainWindow(): BrowserWindow {
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.show();
+    mainWindow.focus();
+    return mainWindow;
   }
+
+  mainWindow = new BrowserWindow({
+    width: 400,
+    height: 500,
+    webPreferences: {
+      preload: join(__dirname, '../preload/index.js'),
+      contextIsolation: true,
+      nodeIntegration: false,
+    },
+  });
+
+  mainWindow.on('closed', () => {
+    mainWindow = null;
+  });
+
+  mainWindow.loadFile('index.html');
+  return mainWindow;
 }
 
 // ❌ Bad: Creating new window every time
@@ -140,7 +158,7 @@ export const users = sqliteTable('users', {
 ```
 
 ### 2.2 Database Initialization
-**Description**: Proper database setup and migration
+**Description**: Proper database setup with error handling
 
 **Best Practices**:
 ```typescript
@@ -152,8 +170,22 @@ export function initDatabase(dbPath: string) {
   try {
     const sqlite = new Database(dbPath);
     const db = drizzle(sqlite);
+    return db;
+  } catch (error) {
+    console.error('Database initialization failed:', error);
+    throw error;
+  }
+}
 
-    // Run migrations
+// For production apps with schema changes, use migrations:
+import { migrate } from 'drizzle-orm/better-sqlite3/migrator';
+
+export function initDatabaseWithMigrations(dbPath: string) {
+  try {
+    const sqlite = new Database(dbPath);
+    const db = drizzle(sqlite);
+
+    // Run migrations for schema versioning
     migrate(db, { migrationsFolder: './drizzle' });
 
     return db;
@@ -163,7 +195,7 @@ export function initDatabase(dbPath: string) {
   }
 }
 
-// ❌ Bad: No error handling or migration
+// ❌ Bad: No error handling
 const sqlite = new Database('db.sqlite');
 const db = drizzle(sqlite);
 ```
@@ -224,7 +256,7 @@ export function RepositoryItem({ id }: { id: string }) {
   const [repo, setRepo] = useState(null);
 
   useEffect(() => {
-    window.electron.getRepository(id).then(setRepo);
+    window.api.getRepository(id).then(setRepo);
   }, [id]);
 
   return <div>...</div>;
@@ -244,14 +276,14 @@ export function useRepositories() {
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
-    window.electron.listRepositories()
+    window.api.listRepositories()
       .then(setRepositories)
       .catch(setError)
       .finally(() => setLoading(false));
   }, []);
 
   const addRepository = async (path: string) => {
-    const repo = await window.electron.addRepository(path);
+    const repo = await window.api.addRepository(path);
     setRepositories(prev => [...prev, repo]);
   };
 
@@ -262,7 +294,7 @@ export function useRepositories() {
 function RepositoryList() {
   const [repos, setRepos] = useState([]);
   useEffect(() => {
-    window.electron.listRepositories().then(setRepos);
+    window.api.listRepositories().then(setRepos);
   }, []);
 }
 ```
@@ -307,12 +339,23 @@ function RepositoryList() {
 ```
 
 ### 4.3 Custom Configuration
-**Description**: Extend Tailwind theme for project-specific design
+**Description**: Configure Tailwind for your project needs
 
-**Best Practices**:
+**Basic Setup**:
 ```javascript
 // tailwind.config.js
-// ✅ Good: Define custom design tokens
+export default {
+  content: ['./src/renderer/**/*.{js,ts,jsx,tsx}'],
+  theme: {
+    extend: {},
+  },
+  plugins: [],
+};
+```
+
+**Optional: Extend with custom design tokens** when you need consistent branding:
+```javascript
+// tailwind.config.js
 export default {
   content: ['./src/renderer/**/*.{js,ts,jsx,tsx}'],
   theme: {
@@ -330,10 +373,9 @@ export default {
     },
   },
 };
-
-// ❌ Bad: Using arbitrary values everywhere
-<div className="bg-[#3b82f6] w-[72px]">Content</div>
 ```
+
+**Note**: Arbitrary values like `bg-[#3b82f6]` are acceptable for one-off cases, but consider adding theme values for colors/spacing used repeatedly.
 
 ### 4.4 Component Composition
 **Description**: Build reusable component variants
@@ -454,7 +496,7 @@ ipcMain.handle('data:fetch', async () => {
 
 // Renderer Process
 try {
-  const data = await window.electron.fetchData();
+  const data = await window.api.fetchData();
   setData(data);
 } catch (error) {
   console.error('Error:', error);
@@ -496,15 +538,16 @@ function handleError(error: Error) {
 ## 7. Performance Optimization
 
 ### 7.1 React Memoization
-**Description**: Optimize re-renders with React.memo and useMemo
+**Description**: Optimize re-renders with React.memo and useMemo when needed
+
+**When to use memoization**:
+- Only when you have measured performance issues
+- For expensive computations that run on every render
+- For large lists or complex filtering/sorting operations
 
 **Best Practices**:
 ```typescript
-// ✅ Good: Memoize expensive computations
-export const RepositoryItem = React.memo(({ repository, onToggle }: Props) => {
-  return <div>...</div>;
-});
-
+// ✅ Good: Memoize expensive computations (large lists, heavy operations)
 function RepositoryList({ repositories }: Props) {
   const sortedRepos = useMemo(() => {
     return [...repositories].sort((a, b) => a.order - b.order);
@@ -513,19 +556,45 @@ function RepositoryList({ repositories }: Props) {
   return <div>{sortedRepos.map(repo => <RepositoryItem key={repo.id} />)}</div>;
 }
 
-// ❌ Bad: No optimization for expensive operations
+// ✅ Also Good: Use React.memo for components with complex props
+export const RepositoryItem = React.memo(({ repository, onToggle }: Props) => {
+  return <div>...</div>;
+});
+
+// ✅ Fine for simple cases: Skip memoization until needed
 function RepositoryList({ repositories }: Props) {
-  const sortedRepos = [...repositories].sort((a, b) => a.order - b.order);
-  return <div>...</div>; // Sorts on every render
+  return <div>{repositories.map(repo => <RepositoryItem key={repo.id} />)}</div>;
+}
+
+// ❌ Bad: Premature optimization for trivial operations
+function Counter({ count }: Props) {
+  const doubled = useMemo(() => count * 2, [count]); // Unnecessary
+  return <div>{doubled}</div>;
 }
 ```
 
+**Note**: Start simple and add memoization only when you identify performance bottlenecks.
+
 ### 7.2 Database Query Optimization
-**Description**: Efficient database queries and indexing
+**Description**: Efficient database queries with proper filtering
 
 **Best Practices**:
 ```typescript
-// ✅ Good: Use indexes and limit results
+// ✅ Good: Use typed queries with proper filtering
+const activeRepos = await db
+  .select()
+  .from(repositories)
+  .where(eq(repositories.enabled, 1))
+  .orderBy(repositories.order)
+  .limit(100);
+
+// ❌ Bad: Fetch all data then filter in memory
+const allRepos = await db.select().from(repositories);
+const activeRepos = allRepos.filter(r => r.enabled === 1);
+```
+
+**Note**: For frequently queried columns, consider adding indexes:
+```typescript
 export const repositories = sqliteTable('repositories', {
   id: text('id').primaryKey(),
   enabled: integer('enabled').notNull(),
@@ -534,17 +603,6 @@ export const repositories = sqliteTable('repositories', {
   enabledIdx: index('enabled_idx').on(table.enabled),
   orderIdx: index('order_idx').on(table.order),
 }));
-
-// Query with proper filtering
-const activeRepos = await db
-  .select()
-  .from(repositories)
-  .where(eq(repositories.enabled, 1))
-  .limit(100);
-
-// ❌ Bad: No indexes, fetch all data
-const allRepos = await db.select().from(repositories);
-const activeRepos = allRepos.filter(r => r.enabled === 1);
 ```
 
 ## 8. Security Best Practices
@@ -558,7 +616,7 @@ const activeRepos = allRepos.filter(r => r.enabled === 1);
 // preload/index.ts
 import { contextBridge, ipcRenderer } from 'electron';
 
-contextBridge.exposeInMainWorld('electron', {
+contextBridge.exposeInMainWorld('api', {
   getData: () => ipcRenderer.invoke('data:get'),
   // Only expose necessary methods
 });
@@ -667,12 +725,14 @@ function addRepository(path: string) {
 
 ## 10. Testing Strategies
 
+**Note**: Testing infrastructure is not yet implemented in this project. The following are recommended patterns for when tests are added.
+
 ### 10.1 Unit Testing
 **Description**: Test components and functions in isolation
 
-**Best Practices**:
+**Recommended approach for custom hooks**:
 ```typescript
-// ✅ Good: Test custom hooks
+// Example: Testing custom hooks with @testing-library/react
 import { renderHook, act } from '@testing-library/react';
 import { useRepositories } from './useRepositories';
 
@@ -693,9 +753,9 @@ test('should fetch repositories on mount', async () => {
 ### 10.2 Integration Testing
 **Description**: Test IPC communication and process interaction
 
-**Best Practices**:
+**Recommended approach for IPC handlers**:
 ```typescript
-// ✅ Good: Test IPC handlers
+// Example: Testing IPC handlers with mocked Electron
 import { ipcMain } from 'electron';
 
 test('should handle repository addition', async () => {
@@ -712,6 +772,12 @@ test('should handle repository addition', async () => {
   });
 });
 ```
+
+**Setup considerations**:
+- Use `@testing-library/react` for component testing
+- Use `vitest` or `jest` as test runner
+- Mock Electron APIs in tests
+- Consider `playwright` for E2E testing
 
 ## Summary
 
