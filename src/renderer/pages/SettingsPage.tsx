@@ -1,17 +1,17 @@
-import { useState } from 'react'
-import { Tabs } from '../components/Tabs'
-import { RepositoryList } from '../components/RepositoryList'
-import { SettingsForm } from '../components/SettingsForm'
-import { useRepositories } from '../hooks/useRepositories'
-import { useSettings } from '../hooks/useSettings'
+import { useState } from "react";
+import { RepositoryList } from "../components/RepositoryList";
+import { SettingsForm } from "../components/SettingsForm";
+import { Tabs } from "../components/Tabs";
+import { useRepositories } from "../hooks/useRepositories";
+import { useSettings } from "../hooks/useSettings";
 
 const TABS = [
-  { id: 'repositories', label: 'Repositories' },
-  { id: 'notifications', label: 'Notification Settings' }
-]
+  { id: "repositories", label: "Repositories" },
+  { id: "notifications", label: "Notification Settings" },
+];
 
 export default function SettingsPage(): JSX.Element {
-  const [activeTab, setActiveTab] = useState('repositories')
+  const [activeTab, setActiveTab] = useState("repositories");
 
   const {
     repositories,
@@ -20,16 +20,23 @@ export default function SettingsPage(): JSX.Element {
     addRepository,
     removeRepository,
     toggleRepository,
-    reorderRepositories
-  } = useRepositories()
+    reorderRepositories,
+  } = useRepositories();
 
-  const { settings, loading: settingsLoading, error: settingsError, updateSettings } = useSettings()
+  const {
+    settings,
+    loading: settingsLoading,
+    error: settingsError,
+    updateSettings,
+  } = useSettings();
 
   return (
     <div className="min-h-screen flex flex-col">
       {/* Header */}
       <header className="bg-white border-b border-gray-200 px-4 py-3">
-        <h1 className="text-lg font-semibold text-gray-900">PR Reminder Settings</h1>
+        <h1 className="text-lg font-semibold text-gray-900">
+          PR Reminder Settings
+        </h1>
       </header>
 
       {/* Tabs */}
@@ -44,28 +51,29 @@ export default function SettingsPage(): JSX.Element {
           </div>
         )}
 
-        {activeTab === 'repositories' && (
-          <>
-            {reposLoading ? (
-              <div className="flex items-center justify-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-              </div>
-            ) : (
-              <RepositoryList
-                repositories={repositories}
-                onToggle={toggleRepository}
-                onRemove={removeRepository}
-                onReorder={reorderRepositories}
-                onAdd={addRepository}
-              />
-            )}
-          </>
-        )}
+        {activeTab === "repositories" &&
+          (reposLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            </div>
+          ) : (
+            <RepositoryList
+              repositories={repositories}
+              onToggle={toggleRepository}
+              onRemove={removeRepository}
+              onReorder={reorderRepositories}
+              onAdd={addRepository}
+            />
+          ))}
 
-        {activeTab === 'notifications' && (
-          <SettingsForm settings={settings} onSave={updateSettings} loading={settingsLoading} />
+        {activeTab === "notifications" && (
+          <SettingsForm
+            settings={settings}
+            onSave={updateSettings}
+            loading={settingsLoading}
+          />
         )}
       </main>
     </div>
-  )
+  );
 }

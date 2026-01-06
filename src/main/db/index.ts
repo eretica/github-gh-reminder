@@ -1,23 +1,23 @@
-import { app } from 'electron'
-import { drizzle } from 'drizzle-orm/better-sqlite3'
-import Database from 'better-sqlite3'
-import { join } from 'path'
-import * as schema from './schema'
-import { DEFAULT_SETTINGS } from '../../shared/types'
+import { join } from "node:path";
+import Database from "better-sqlite3";
+import { drizzle } from "drizzle-orm/better-sqlite3";
+import { app } from "electron";
+import { DEFAULT_SETTINGS } from "../../shared/types";
+import * as schema from "./schema";
 
-let db: ReturnType<typeof drizzle<typeof schema>> | null = null
-let sqlite: Database.Database | null = null
+let db: ReturnType<typeof drizzle<typeof schema>> | null = null;
+let sqlite: Database.Database | null = null;
 
 export function initDatabase(): ReturnType<typeof drizzle<typeof schema>> {
-  if (db) return db
+  if (db) return db;
 
-  const userDataPath = app.getPath('userData')
-  const dbPath = join(userDataPath, 'pr-reminder.db')
+  const userDataPath = app.getPath("userData");
+  const dbPath = join(userDataPath, "pr-reminder.db");
 
-  sqlite = new Database(dbPath)
+  sqlite = new Database(dbPath);
 
   // Enable WAL mode for better performance
-  sqlite.pragma('journal_mode = WAL')
+  sqlite.pragma("journal_mode = WAL");
 
   // Create tables if they don't exist
   sqlite.exec(`
@@ -58,42 +58,46 @@ export function initDatabase(): ReturnType<typeof drizzle<typeof schema>> {
 
     CREATE INDEX IF NOT EXISTS idx_pr_repository ON pull_requests(repository_id);
     CREATE INDEX IF NOT EXISTS idx_notification_pr ON notification_history(pr_id);
-  `)
+  `);
 
-  db = drizzle(sqlite, { schema })
+  db = drizzle(sqlite, { schema });
 
   // Initialize default settings if not exist
-  initDefaultSettings()
+  initDefaultSettings();
 
-  return db
+  return db;
 }
 
 function initDefaultSettings(): void {
-  if (!sqlite) return
+  if (!sqlite) return;
 
-  const settingsKeys = Object.keys(DEFAULT_SETTINGS) as (keyof typeof DEFAULT_SETTINGS)[]
+  const settingsKeys = Object.keys(
+    DEFAULT_SETTINGS,
+  ) as (keyof typeof DEFAULT_SETTINGS)[];
 
   for (const key of settingsKeys) {
-    const existing = sqlite.prepare('SELECT key FROM settings WHERE key = ?').get(key)
+    const existing = sqlite
+      .prepare("SELECT key FROM settings WHERE key = ?")
+      .get(key);
     if (!existing) {
       sqlite
-        .prepare('INSERT INTO settings (key, value) VALUES (?, ?)')
-        .run(key, JSON.stringify(DEFAULT_SETTINGS[key]))
+        .prepare("INSERT INTO settings (key, value) VALUES (?, ?)")
+        .run(key, JSON.stringify(DEFAULT_SETTINGS[key]));
     }
   }
 }
 
 export function getDatabase(): ReturnType<typeof drizzle<typeof schema>> {
   if (!db) {
-    throw new Error('Database not initialized. Call initDatabase() first.')
+    throw new Error("Database not initialized. Call initDatabase() first.");
   }
-  return db
+  return db;
 }
 
 export function closeDatabase(): void {
   if (sqlite) {
-    sqlite.close()
-    sqlite = null
-    db = null
+    sqlite.close();
+    sqlite = null;
+    db = null;
   }
 }

@@ -5,10 +5,7 @@
   "directories": {
     "output": "dist"
   },
-  "files": [
-    "out/**/*",
-    "resources/**/*"
-  ],
+  "files": ["out/**/*", "resources/**/*"],
   "mac": {
     "target": ["dmg", "zip"],
     "icon": "resources/icon.icns",
