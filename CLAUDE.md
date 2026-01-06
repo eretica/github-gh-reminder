@@ -345,7 +345,7 @@ function RepositoryList() {
 ```javascript
 // tailwind.config.js
 export default {
-  content: ['./src/renderer/**/*.{js,ts,jsx,tsx}'],
+  content: ['./src/renderer/**/*.{js,ts,jsx,tsx,html}'],
   theme: {
     extend: {},
   },
@@ -357,7 +357,7 @@ export default {
 ```javascript
 // tailwind.config.js
 export default {
-  content: ['./src/renderer/**/*.{js,ts,jsx,tsx}'],
+  content: ['./src/renderer/**/*.{js,ts,jsx,tsx,html}'],
   theme: {
     extend: {
       colors: {
