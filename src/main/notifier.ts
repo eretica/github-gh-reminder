@@ -42,7 +42,11 @@ export function notifyNewPR(
   });
 
   notification.on("click", () => {
-    deps.openExternal(pr.url);
+    try {
+      deps.openExternal(pr.url);
+    } catch (error) {
+      console.error(`Failed to open URL: ${pr.url}`, error);
+    }
   });
 
   notification.show();
@@ -69,7 +73,11 @@ export function notifyReminder(
   notification.on("click", () => {
     if (count === 1) {
       // Single PR: navigate directly to GitHub
-      deps.openExternal(prs[0].url);
+      try {
+        deps.openExternal(prs[0].url);
+      } catch (error) {
+        console.error(`Failed to open URL: ${prs[0].url}`, error);
+      }
     } else {
       // Multiple PRs: open the menu window
       const tray = deps.getTray();

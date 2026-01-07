@@ -53,8 +53,9 @@ export function createTray(injectedDeps: TrayDeps = defaultDeps): Tray {
   // Click to show window (no context menu)
   // Always show the menu window regardless of PR count
   tray.on("click", (_event, bounds) => {
-    deps!.setTrayBounds(bounds);
-    deps!.createMainWindow();
+    if (!deps) return;
+    deps.setTrayBounds(bounds);
+    deps.createMainWindow();
   });
 
   return tray;

@@ -114,6 +114,23 @@ describe("notifier", () => {
         "https://github.com/owner/repo/pull/123",
       );
     });
+
+    it("handles error when opening URL fails", () => {
+      const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+      mockDeps.openExternal = vi.fn().mockImplementation(() => {
+        throw new Error("Failed to open external URL");
+      });
+
+      notifyNewPR(mockPR, mockDeps);
+      mockDeps.clickHandler!();
+
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        expect.stringContaining("Failed to open URL"),
+        expect.any(Error),
+      );
+
+      consoleErrorSpy.mockRestore();
+    });
   });
 
   describe("notifyReminder", () => {
@@ -222,6 +239,23 @@ describe("notifier", () => {
       expect(mockDeps.openExternal).not.toHaveBeenCalled();
       expect(mockDeps.setTrayBounds).not.toHaveBeenCalled();
       expect(mockDeps.createMainWindow).toHaveBeenCalled();
+    });
+
+    it("handles error when opening single PR URL fails", () => {
+      const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+      mockDeps.openExternal = vi.fn().mockImplementation(() => {
+        throw new Error("Failed to open external URL");
+      });
+
+      notifyReminder([mockSinglePR], mockDeps);
+      mockDeps.clickHandler!();
+
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        expect.stringContaining("Failed to open URL"),
+        expect.any(Error),
+      );
+
+      consoleErrorSpy.mockRestore();
     });
   });
 

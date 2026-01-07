@@ -187,6 +187,20 @@ describe("tray", () => {
       expect(mockDeps.setTrayBounds).toHaveBeenCalledWith(mockBounds);
       expect(mockDeps.createMainWindow).toHaveBeenCalled();
     });
+
+    it("does not crash when click handler is called after tray is destroyed", () => {
+      createTray(mockDeps);
+      const clickHandler = mockDeps.clickHandler;
+
+      destroyTray();
+
+      // Should not throw error
+      expect(() => clickHandler!({}, mockBounds)).not.toThrow();
+
+      // Should not call any methods after destroy
+      expect(mockDeps.setTrayBounds).not.toHaveBeenCalled();
+      expect(mockDeps.createMainWindow).not.toHaveBeenCalled();
+    });
   });
 
   describe("updateTrayMenu", () => {
