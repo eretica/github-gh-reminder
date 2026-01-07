@@ -779,6 +779,48 @@ test('should handle repository addition', async () => {
 - Mock Electron APIs in tests
 - Consider `playwright` for E2E testing
 
+## 11. Lessons Learned
+
+**Description**: This section documents project-specific mistakes, fixes, and patterns discovered during development. It serves as a living record of what we've learned to prevent repeating the same issues.
+
+### How to Contribute to This Section
+
+When you encounter a significant bug, mistake, or learn an important lesson:
+
+1. **Via Pull Requests**: Use the PR template's "Lessons Learned" section to document what you learned
+2. **Via Commit Messages**: Use tags like `[lesson]`, `[antipattern]`, or `[fix]` in commit messages
+3. **Direct Updates**: Add entries to this section following the format below
+
+### Entry Format
+
+Each entry should include:
+- **Date**: When the issue was discovered/fixed
+- **Category**: Type of issue (Bug, Performance, Security, Architecture, etc.)
+- **Problem**: What went wrong or what mistake was made
+- **Solution**: How it was fixed
+- **Lesson**: What we learned and how to avoid it in the future
+- **Related**: Links to PRs, issues, or commits
+
+### Documented Lessons
+
+#### Example Entry (Remove this after adding real entries)
+
+**Date**: 2026-01-07
+**Category**: Documentation
+**Problem**: No systematic way to capture and document mistakes and fixes
+**Solution**: Added this "Lessons Learned" section to CLAUDE.md with clear contribution guidelines
+**Lesson**: Documenting mistakes as they occur prevents knowledge loss and helps new team members avoid common pitfalls
+**Related**: Issue #35
+
+---
+
+**Instructions for maintaining this section**:
+- Keep entries in reverse chronological order (newest first)
+- Be honest about mistakes - they're learning opportunities
+- Focus on lessons that will benefit the team long-term
+- Update related best practices sections when patterns emerge
+- Archive old entries (move to a separate LESSONS_ARCHIVE.md) after 1 year to keep this section focused
+
 ## Summary
 
 This skills document provides comprehensive patterns for clean Electron + TailwindCSS development, covering:
@@ -793,5 +835,6 @@ This skills document provides comprehensive patterns for clean Electron + Tailwi
 8. **Security**: Context isolation, input validation
 9. **Build**: Electron Builder configuration, code signing
 10. **Testing**: Unit tests, integration tests
+11. **Lessons Learned**: Project-specific mistakes and fixes to prevent future issues
 
 Follow these patterns to maintain clean, maintainable, and performant Electron applications.
