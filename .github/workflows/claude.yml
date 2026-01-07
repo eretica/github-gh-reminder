@@ -41,11 +41,12 @@ jobs:
             actions: read
 
           # Optional: Give a custom prompt to Claude. If this is not specified, Claude will perform the instructions specified in the comment that tagged it.
-          # prompt: 'Update the pull request description to include a summary of changes.'
+          prompt: '日本語で回答してください。'
 
           # Optional: Add claude_args to customize behavior and configuration
           # See https://github.com/anthropics/claude-code-action/blob/main/docs/usage.md
           # or https://code.claude.com/docs/en/cli-reference for available options
-          # デフォルトのツールを使用（ファイル編集、git操作、gh操作すべて可能）
+          # 使用可能なツールを明示的に指定
+          claude_args: '--allowedTools "Read,Write,Edit,WebSearch,WebFetch,Bash(pnpm view:*),mcp__github__get_issue,mcp__github__add_issue_comment,mcp__github__push_files,mcp__github__create_branch,mcp__github__create_pull_request,mcp__github__update_pull_request"'
           track_progress: true
 
