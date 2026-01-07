@@ -15,8 +15,8 @@ vi.mock("./windows", () => ({
 
 // Import after mocks
 import { Notification, shell } from "electron";
-import { createMainWindow } from "./windows";
 import { notifyError, notifyNewPR, notifyReminder } from "./notifier";
+import { createMainWindow } from "./windows";
 
 const mockNotification = Notification as unknown as Mock;
 const mockShellOpenExternal = shell.openExternal as Mock;

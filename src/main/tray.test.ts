@@ -23,8 +23,7 @@ vi.mock("./windows", () => ({
 }));
 
 // Import after mocks
-import { nativeImage, shell, Tray } from "electron";
-import { createMainWindow, setTrayBounds } from "./windows";
+import { shell, Tray } from "electron";
 import {
   createTray,
   destroyTray,
@@ -32,6 +31,7 @@ import {
   getTray,
   updateTrayMenu,
 } from "./tray";
+import { createMainWindow, setTrayBounds } from "./windows";
 
 const mockTray = Tray as unknown as Mock;
 const mockCreateMainWindow = createMainWindow as Mock;

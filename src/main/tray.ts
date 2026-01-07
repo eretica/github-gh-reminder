@@ -1,5 +1,5 @@
 import { join } from "node:path";
-import { nativeImage, shell, Tray } from "electron";
+import { nativeImage, Tray } from "electron";
 import type { PullRequest } from "../shared/types";
 import { createMainWindow, setTrayBounds } from "./windows";
 
