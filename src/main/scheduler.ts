@@ -209,7 +209,10 @@ class PRScheduler {
           ),
         );
 
-      const uniquePRsForRepo = prsToRemind.map((item) => ({ pr: item.pr, repo }));
+      const uniquePRsForRepo = prsToRemind.map((item) => ({
+        pr: item.pr,
+        repo,
+      }));
 
       if (uniquePRsForRepo.length > 0) {
         prsToRemindByRepo.set(repo.id, uniquePRsForRepo);

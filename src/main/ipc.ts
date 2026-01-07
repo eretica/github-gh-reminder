@@ -189,7 +189,9 @@ export function setupIpcHandlers(): void {
           settings.reminderIntervalHours > 168 ||
           !Number.isInteger(settings.reminderIntervalHours))
       ) {
-        throw new Error("Reminder interval must be an integer between 1 and 168");
+        throw new Error(
+          "Reminder interval must be an integer between 1 and 168",
+        );
       }
 
       if (

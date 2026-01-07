@@ -30,6 +30,11 @@ describe("useRepositories", () => {
       order: 0,
       createdAt: "2024-01-01T00:00:00Z",
       updatedAt: "2024-01-01T00:00:00Z",
+      notifyOnNew: true,
+      enableReminder: true,
+      reminderIntervalHours: 1,
+      notificationPriority: "normal",
+      silent: false,
     },
     {
       id: "repo2",
@@ -39,6 +44,11 @@ describe("useRepositories", () => {
       order: 1,
       createdAt: "2024-01-02T00:00:00Z",
       updatedAt: "2024-01-02T00:00:00Z",
+      notifyOnNew: true,
+      enableReminder: true,
+      reminderIntervalHours: 1,
+      notificationPriority: "normal",
+      silent: false,
     },
   ];
 
@@ -106,6 +116,11 @@ describe("useRepositories", () => {
         order: 2,
         createdAt: "2024-01-03T00:00:00Z",
         updatedAt: "2024-01-03T00:00:00Z",
+        notifyOnNew: true,
+        enableReminder: true,
+        reminderIntervalHours: 1,
+        notificationPriority: "normal",
+        silent: false,
       };
       (mockApi.addRepository as ReturnType<typeof vi.fn>).mockResolvedValue(
         newRepo,
@@ -215,6 +230,11 @@ describe("useRepositories", () => {
           order: 2,
           createdAt: "2024-01-03T00:00:00Z",
           updatedAt: "2024-01-03T00:00:00Z",
+          notifyOnNew: true,
+          enableReminder: true,
+          reminderIntervalHours: 1,
+          notificationPriority: "normal",
+          silent: false,
         },
       ];
       (mockApi.listRepositories as ReturnType<typeof vi.fn>).mockResolvedValue(

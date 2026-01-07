@@ -166,9 +166,9 @@ export function RepositoryItem({
           {/* Reminder Interval */}
           {repository.enableReminder && (
             <div className="ml-6 space-y-1">
-              <label className="text-xs text-gray-600">
+              <div className="text-xs text-gray-600">
                 Reminder interval (hours)
-              </label>
+              </div>
               <input
                 type="number"
                 min="1"
@@ -190,7 +190,7 @@ export function RepositoryItem({
 
           {/* Priority */}
           <div className="space-y-1">
-            <label className="text-xs text-gray-600">Priority level</label>
+            <div className="text-xs text-gray-600">Priority level</div>
             <select
               value={repository.notificationPriority}
               onChange={(e) =>
