@@ -7,6 +7,7 @@ import {
   IPC_CHANNELS,
   type PullRequest,
   type Repository,
+  type RepositoryNotificationSettings,
   type Settings,
 } from "../shared/types";
 import { getDatabase } from "./db";
@@ -32,6 +33,11 @@ export function setupIpcHandlers(): void {
       order: r.order,
       createdAt: r.createdAt,
       updatedAt: r.updatedAt,
+      notifyOnNew: r.notifyOnNew === 1,
+      enableReminder: r.enableReminder === 1,
+      reminderIntervalHours: r.reminderIntervalHours,
+      notificationPriority: r.notificationPriority as "low" | "normal" | "high",
+      silent: r.silent === 1,
     }));
   });
 
@@ -102,6 +108,11 @@ export function setupIpcHandlers(): void {
         order: newRepo.order!,
         createdAt: now,
         updatedAt: now,
+        notifyOnNew: true,
+        enableReminder: true,
+        reminderIntervalHours: 1,
+        notificationPriority: "normal",
+        silent: false,
       };
     },
   );
@@ -148,6 +159,41 @@ export function setupIpcHandlers(): void {
           .set({ order: i, updatedAt: now })
           .where(eq(schema.repositories.id, ids[i]));
       }
+    },
+  );
+
+  ipcMain.handle(
+    IPC_CHANNELS.REPO_UPDATE_NOTIFICATION_SETTINGS,
+    async (
+      _,
+      id: string,
+      settings: Partial<RepositoryNotificationSettings>,
+    ): Promise<void> => {
+      const db = getDatabase();
+      const now = new Date().toISOString();
+
+      const updateData: Record<string, unknown> = { updatedAt: now };
+
+      if (settings.notifyOnNew !== undefined) {
+        updateData.notifyOnNew = settings.notifyOnNew ? 1 : 0;
+      }
+      if (settings.enableReminder !== undefined) {
+        updateData.enableReminder = settings.enableReminder ? 1 : 0;
+      }
+      if (settings.reminderIntervalHours !== undefined) {
+        updateData.reminderIntervalHours = settings.reminderIntervalHours;
+      }
+      if (settings.notificationPriority !== undefined) {
+        updateData.notificationPriority = settings.notificationPriority;
+      }
+      if (settings.silent !== undefined) {
+        updateData.silent = settings.silent ? 1 : 0;
+      }
+
+      await db
+        .update(schema.repositories)
+        .set(updateData)
+        .where(eq(schema.repositories.id, id));
     },
   );
 

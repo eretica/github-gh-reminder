@@ -1,11 +1,22 @@
 import { Notification, shell } from "electron";
 import type { PullRequest } from "../shared/types";
 
-export function notifyNewPR(pr: PullRequest): void {
+export function notifyNewPR(
+  pr: PullRequest,
+  priority: "low" | "normal" | "high" = "normal",
+): void {
+  // Determine urgency based on priority
+  const urgencyMap = {
+    low: "low" as const,
+    normal: "normal" as const,
+    high: "critical" as const,
+  };
+
   const notification = new Notification({
     title: "New PR Review Request",
     body: `${pr.repositoryName}: #${pr.prNumber} ${pr.title}\nby @${pr.author}`,
     silent: false,
+    urgency: urgencyMap[priority],
   });
 
   notification.on("click", () => {

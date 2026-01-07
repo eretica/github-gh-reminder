@@ -1,5 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
-import type { Repository } from "../../shared/types";
+import type {
+  Repository,
+  RepositoryNotificationSettings,
+} from "../../shared/types";
 
 interface UseRepositoriesReturn {
   repositories: Repository[];
@@ -9,6 +12,10 @@ interface UseRepositoriesReturn {
   removeRepository: (id: string) => Promise<void>;
   toggleRepository: (id: string, enabled: boolean) => Promise<void>;
   reorderRepositories: (ids: string[]) => Promise<void>;
+  updateNotificationSettings: (
+    id: string,
+    settings: Partial<RepositoryNotificationSettings>
+  ) => Promise<void>;
   refresh: () => Promise<void>;
 }
 
@@ -89,6 +96,25 @@ export function useRepositories(): UseRepositoriesReturn {
     }
   }, []);
 
+  const updateNotificationSettings = useCallback(
+    async (id: string, settings: Partial<RepositoryNotificationSettings>) => {
+      try {
+        setError(null);
+        await window.api.updateRepositoryNotificationSettings(id, settings);
+        setRepositories((prev) =>
+          prev.map((r) => (r.id === id ? { ...r, ...settings } : r)),
+        );
+      } catch (err) {
+        setError(
+          err instanceof Error
+            ? err.message
+            : "Failed to update notification settings",
+        );
+      }
+    },
+    [],
+  );
+
   return {
     repositories,
     loading,
@@ -97,6 +123,7 @@ export function useRepositories(): UseRepositoriesReturn {
     removeRepository,
     toggleRepository,
     reorderRepositories,
+    updateNotificationSettings,
     refresh,
   };
 }

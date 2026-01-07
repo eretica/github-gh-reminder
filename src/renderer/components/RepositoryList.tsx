@@ -12,7 +12,10 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import type { Repository } from "../../shared/types";
+import type {
+  Repository,
+  RepositoryNotificationSettings,
+} from "../../shared/types";
 import { RepositoryItem } from "./RepositoryItem";
 
 interface RepositoryListProps {
@@ -21,6 +24,10 @@ interface RepositoryListProps {
   onRemove: (id: string) => void;
   onReorder: (ids: string[]) => void;
   onAdd: () => void;
+  onUpdateNotificationSettings?: (
+    id: string,
+    settings: Partial<RepositoryNotificationSettings>
+  ) => void;
 }
 
 export function RepositoryList({
@@ -29,6 +36,7 @@ export function RepositoryList({
   onRemove,
   onReorder,
   onAdd,
+  onUpdateNotificationSettings,
 }: RepositoryListProps): JSX.Element {
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -116,6 +124,7 @@ export function RepositoryList({
                   repository={repo}
                   onToggle={onToggle}
                   onRemove={onRemove}
+                  onUpdateNotificationSettings={onUpdateNotificationSettings}
                 />
               ))}
             </div>

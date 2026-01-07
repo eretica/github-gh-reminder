@@ -1,18 +1,28 @@
+import { useState } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import type { Repository } from "../../shared/types";
+import type {
+  Repository,
+  RepositoryNotificationSettings,
+} from "../../shared/types";
 
 interface RepositoryItemProps {
   repository: Repository;
   onToggle: (id: string, enabled: boolean) => void;
   onRemove: (id: string) => void;
+  onUpdateNotificationSettings?: (
+    id: string,
+    settings: Partial<RepositoryNotificationSettings>
+  ) => void;
 }
 
 export function RepositoryItem({
   repository,
   onToggle,
   onRemove,
+  onUpdateNotificationSettings,
 }: RepositoryItemProps): JSX.Element {
+  const [showSettings, setShowSettings] = useState(false);
   const {
     attributes,
     listeners,
@@ -69,6 +79,29 @@ export function RepositoryItem({
           </div>
         </div>
 
+        {/* Settings button */}
+        {onUpdateNotificationSettings && (
+          <button
+            onClick={() => setShowSettings(!showSettings)}
+            className="text-gray-400 hover:text-blue-500 transition-all duration-200 hover:scale-110 active:scale-95"
+            title="Notification settings"
+          >
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+              />
+            </svg>
+          </button>
+        )}
+
         {/* Delete button */}
         <button
           onClick={() => onRemove(repository.id)}
@@ -90,6 +123,106 @@ export function RepositoryItem({
           </svg>
         </button>
       </div>
+
+      {/* Notification Settings Panel */}
+      {showSettings && onUpdateNotificationSettings && (
+        <div className="mt-3 pt-3 border-t border-gray-200 space-y-3 animate-fadeIn">
+          <div className="text-sm font-medium text-gray-700">
+            Notification Settings
+          </div>
+
+          {/* Notify on New PRs */}
+          <label className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={repository.notifyOnNew}
+              onChange={(e) =>
+                onUpdateNotificationSettings(repository.id, {
+                  notifyOnNew: e.target.checked,
+                })
+              }
+              className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+            />
+            <span className="text-sm text-gray-600">
+              Notify on new PR reviews
+            </span>
+          </label>
+
+          {/* Enable Reminders */}
+          <label className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={repository.enableReminder}
+              onChange={(e) =>
+                onUpdateNotificationSettings(repository.id, {
+                  enableReminder: e.target.checked,
+                })
+              }
+              className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+            />
+            <span className="text-sm text-gray-600">Enable reminders</span>
+          </label>
+
+          {/* Reminder Interval */}
+          {repository.enableReminder && (
+            <div className="ml-6 space-y-1">
+              <label className="text-xs text-gray-600">
+                Reminder interval (hours)
+              </label>
+              <input
+                type="number"
+                min="1"
+                max="168"
+                value={repository.reminderIntervalHours}
+                onChange={(e) =>
+                  onUpdateNotificationSettings(repository.id, {
+                    reminderIntervalHours: Number.parseInt(e.target.value),
+                  })
+                }
+                className="w-20 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+          )}
+
+          {/* Priority */}
+          <div className="space-y-1">
+            <label className="text-xs text-gray-600">Priority level</label>
+            <select
+              value={repository.notificationPriority}
+              onChange={(e) =>
+                onUpdateNotificationSettings(repository.id, {
+                  notificationPriority: e.target.value as
+                    | "low"
+                    | "normal"
+                    | "high",
+                })
+              }
+              className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="low">Low</option>
+              <option value="normal">Normal</option>
+              <option value="high">High</option>
+            </select>
+          </div>
+
+          {/* Do Not Disturb */}
+          <label className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={repository.silent}
+              onChange={(e) =>
+                onUpdateNotificationSettings(repository.id, {
+                  silent: e.target.checked,
+                })
+              }
+              className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+            />
+            <span className="text-sm text-gray-600">
+              Do Not Disturb (silence all notifications)
+            </span>
+          </label>
+        </div>
+      )}
     </div>
   );
 }

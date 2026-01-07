@@ -21,6 +21,7 @@ export default function SettingsPage(): JSX.Element {
     removeRepository,
     toggleRepository,
     reorderRepositories,
+    updateNotificationSettings,
   } = useRepositories();
 
   const {
@@ -87,6 +88,7 @@ export default function SettingsPage(): JSX.Element {
                 onRemove={removeRepository}
                 onReorder={reorderRepositories}
                 onAdd={addRepository}
+                onUpdateNotificationSettings={updateNotificationSettings}
               />
             )}
           </div>

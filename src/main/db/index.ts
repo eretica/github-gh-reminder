@@ -28,7 +28,12 @@ export function initDatabase(): ReturnType<typeof drizzle<typeof schema>> {
       enabled INTEGER NOT NULL DEFAULT 1,
       "order" INTEGER NOT NULL DEFAULT 0,
       created_at TEXT NOT NULL,
-      updated_at TEXT NOT NULL
+      updated_at TEXT NOT NULL,
+      notify_on_new INTEGER NOT NULL DEFAULT 1,
+      enable_reminder INTEGER NOT NULL DEFAULT 1,
+      reminder_interval_hours INTEGER NOT NULL DEFAULT 1,
+      notification_priority TEXT NOT NULL DEFAULT 'normal',
+      silent INTEGER NOT NULL DEFAULT 0
     );
 
     CREATE TABLE IF NOT EXISTS settings (
@@ -62,10 +67,29 @@ export function initDatabase(): ReturnType<typeof drizzle<typeof schema>> {
 
   db = drizzle(sqlite, { schema });
 
+  // Run migrations for existing databases
+  runMigrations(sqlite);
+
   // Initialize default settings if not exist
   initDefaultSettings();
 
   return db;
+}
+
+function runMigrations(sqlite: Database.Database): void {
+  // Check if the new notification columns exist, if not add them
+  const tableInfo = sqlite.pragma("table_info(repositories)");
+  const columns = tableInfo.map((col: { name: string }) => col.name);
+
+  if (!columns.includes("notify_on_new")) {
+    sqlite.exec(`
+      ALTER TABLE repositories ADD COLUMN notify_on_new INTEGER NOT NULL DEFAULT 1;
+      ALTER TABLE repositories ADD COLUMN enable_reminder INTEGER NOT NULL DEFAULT 1;
+      ALTER TABLE repositories ADD COLUMN reminder_interval_hours INTEGER NOT NULL DEFAULT 1;
+      ALTER TABLE repositories ADD COLUMN notification_priority TEXT NOT NULL DEFAULT 'normal';
+      ALTER TABLE repositories ADD COLUMN silent INTEGER NOT NULL DEFAULT 0;
+    `);
+  }
 }
 
 function initDefaultSettings(): void {
