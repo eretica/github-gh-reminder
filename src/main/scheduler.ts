@@ -247,6 +247,15 @@ class PRScheduler {
       firstSeenAt: pr.firstSeenAt,
       notifiedAt: pr.notifiedAt,
       lastRemindedAt: pr.lastRemindedAt,
+      // Extended PR details from GitHub
+      isDraft: ghPR?.isDraft,
+      state: ghPR?.state,
+      reviewDecision: ghPR?.reviewDecision,
+      reviewRequestsCount: ghPR?.reviewRequests?.length,
+      commentsCount: ghPR?.comments?.length,
+      changedFiles: ghPR?.changedFiles,
+      mergeable: ghPR?.mergeable,
+      statusCheckRollup: ghPR?.statusCheckRollup,
     };
   }
 
