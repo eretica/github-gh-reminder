@@ -1,5 +1,6 @@
 import { Notification, shell } from "electron";
 import type { PullRequest } from "../shared/types";
+import { createMainWindow } from "./windows";
 
 export function notifyNewPR(pr: PullRequest): void {
   const notification = new Notification({
@@ -33,8 +34,10 @@ export function notifyReminder(prs: PullRequest[]): void {
   notification.on("click", () => {
     if (count === 1) {
       shell.openExternal(prs[0].url);
+    } else {
+      // For multiple PRs, show the menu window
+      createMainWindow();
     }
-    // For multiple PRs, just show the app (handled by tray click)
   });
 
   notification.show();
