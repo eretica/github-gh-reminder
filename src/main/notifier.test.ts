@@ -116,7 +116,9 @@ describe("notifier", () => {
     });
 
     it("handles error when opening URL fails", () => {
-      const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+      const consoleErrorSpy = vi
+        .spyOn(console, "error")
+        .mockImplementation(() => {});
       mockDeps.openExternal = vi.fn().mockImplementation(() => {
         throw new Error("Failed to open external URL");
       });
@@ -242,7 +244,9 @@ describe("notifier", () => {
     });
 
     it("handles error when opening single PR URL fails", () => {
-      const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+      const consoleErrorSpy = vi
+        .spyOn(console, "error")
+        .mockImplementation(() => {});
       mockDeps.openExternal = vi.fn().mockImplementation(() => {
         throw new Error("Failed to open external URL");
       });
