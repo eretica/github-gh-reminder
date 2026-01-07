@@ -1,4 +1,3 @@
-import type React from "react";
 import type { PullRequest } from "../../shared/types";
 
 interface PullRequestItemProps {
