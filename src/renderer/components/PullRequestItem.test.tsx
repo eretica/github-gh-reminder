@@ -185,7 +185,9 @@ describe("PullRequestItem", () => {
         reviewDecision: "CHANGES_REQUESTED",
       };
       const onOpen = vi.fn();
-      render(<PullRequestItem pullRequest={changesRequestedPR} onOpen={onOpen} />);
+      render(
+        <PullRequestItem pullRequest={changesRequestedPR} onOpen={onOpen} />,
+      );
 
       expect(screen.getByText("Changes requested")).toBeInTheDocument();
     });
@@ -196,7 +198,9 @@ describe("PullRequestItem", () => {
         reviewDecision: "REVIEW_REQUIRED",
       };
       const onOpen = vi.fn();
-      render(<PullRequestItem pullRequest={reviewRequiredPR} onOpen={onOpen} />);
+      render(
+        <PullRequestItem pullRequest={reviewRequiredPR} onOpen={onOpen} />,
+      );
 
       expect(screen.getByText("Review required")).toBeInTheDocument();
     });
@@ -241,7 +245,9 @@ describe("PullRequestItem", () => {
         commentsCount: 0,
       };
       const onOpen = vi.fn();
-      render(<PullRequestItem pullRequest={prWithNoComments} onOpen={onOpen} />);
+      render(
+        <PullRequestItem pullRequest={prWithNoComments} onOpen={onOpen} />,
+      );
 
       expect(screen.queryByTitle("Comments")).not.toBeInTheDocument();
     });
