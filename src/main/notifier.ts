@@ -26,7 +26,10 @@ export function notifyNewPR(
   notification.show();
 }
 
-export function notifyReminder(prs: PullRequest[]): void {
+export function notifyReminder(
+  prs: PullRequest[],
+  priority: "low" | "normal" | "high" = "normal",
+): void {
   if (prs.length === 0) return;
 
   const count = prs.length;
@@ -35,10 +38,18 @@ export function notifyReminder(prs: PullRequest[]): void {
       ? `${prs[0].repositoryName}: #${prs[0].prNumber} ${prs[0].title}`
       : `You have ${count} PRs waiting for your review`;
 
+  // Determine urgency based on priority
+  const urgencyMap = {
+    low: "low" as const,
+    normal: "normal" as const,
+    high: "critical" as const,
+  };
+
   const notification = new Notification({
     title: "PR Review Reminder",
     body,
     silent: false,
+    urgency: urgencyMap[priority],
   });
 
   notification.on("click", () => {

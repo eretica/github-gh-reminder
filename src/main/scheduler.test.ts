@@ -335,6 +335,11 @@ describe("PRScheduler", () => {
         order: 0,
         createdAt: "2024-01-01",
         updatedAt: "2024-01-01",
+        notifyOnNew: 1,
+        enableReminder: 1,
+        reminderIntervalHours: 1,
+        notificationPriority: "normal",
+        silent: 0,
       };
 
       const ghPR = {
@@ -386,6 +391,11 @@ describe("PRScheduler", () => {
         order: 0,
         createdAt: "2024-01-01",
         updatedAt: "2024-01-01",
+        notifyOnNew: 0,
+        enableReminder: 1,
+        reminderIntervalHours: 1,
+        notificationPriority: "normal",
+        silent: 0,
       };
 
       const ghPR = {
@@ -548,7 +558,16 @@ describe("PRScheduler", () => {
             notifiedAt: null,
             lastRemindedAt: null, // Never reminded
           },
-          repo: { name: "owner/repo", id: "repo1", enabled: 1 },
+          repo: {
+            name: "owner/repo",
+            id: "repo1",
+            enabled: 1,
+            notifyOnNew: 1,
+            enableReminder: 1,
+            reminderIntervalHours: 1,
+            notificationPriority: "normal",
+            silent: 0,
+          },
         },
       ];
 
@@ -637,7 +656,16 @@ describe("PRScheduler", () => {
             notifiedAt: null,
             lastRemindedAt: null,
           },
-          repo: { name: "owner/repo", id: "repo1", enabled: 1 },
+          repo: {
+            name: "owner/repo",
+            id: "repo1",
+            enabled: 1,
+            notifyOnNew: 1,
+            enableReminder: 1,
+            reminderIntervalHours: 1,
+            notificationPriority: "normal",
+            silent: 0,
+          },
         },
       ];
 

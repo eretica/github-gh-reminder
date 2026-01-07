@@ -181,7 +181,28 @@ export function setupIpcHandlers(): void {
         throw new Error("Repository not found");
       }
 
-      // Validate input
+      // Validate input types
+      if (
+        settings.notifyOnNew !== undefined &&
+        typeof settings.notifyOnNew !== "boolean"
+      ) {
+        throw new Error("notifyOnNew must be a boolean");
+      }
+
+      if (
+        settings.enableReminder !== undefined &&
+        typeof settings.enableReminder !== "boolean"
+      ) {
+        throw new Error("enableReminder must be a boolean");
+      }
+
+      if (
+        settings.silent !== undefined &&
+        typeof settings.silent !== "boolean"
+      ) {
+        throw new Error("silent must be a boolean");
+      }
+
       if (
         settings.reminderIntervalHours !== undefined &&
         (typeof settings.reminderIntervalHours !== "number" ||

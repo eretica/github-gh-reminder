@@ -234,8 +234,18 @@ class PRScheduler {
       this.toFrontendPR(item.pr, item.repo.name),
     );
 
-    // Send reminder notification
-    notifyReminder(frontendPRs);
+    // Determine highest priority from all repos being reminded
+    const priorityRank = { low: 0, normal: 1, high: 2 };
+    const highestPriority = allPRsToRemind.reduce((maxPriority, item) => {
+      const repoPriority = item.repo
+        .notificationPriority as keyof typeof priorityRank;
+      return priorityRank[repoPriority] > priorityRank[maxPriority]
+        ? repoPriority
+        : maxPriority;
+    }, "low" as "low" | "normal" | "high");
+
+    // Send reminder notification with highest priority
+    notifyReminder(frontendPRs, highestPriority);
 
     // Update last reminded time
     const nowStr = now.toISOString();
