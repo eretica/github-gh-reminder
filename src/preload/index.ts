@@ -37,6 +37,8 @@ const api: IpcApi = {
   // Windows
   openSettings: (): Promise<void> =>
     ipcRenderer.invoke(IPC_CHANNELS.OPEN_SETTINGS),
+  closeSettings: (): Promise<void> =>
+    ipcRenderer.invoke(IPC_CHANNELS.CLOSE_SETTINGS),
   quitApp: (): Promise<void> => ipcRenderer.invoke(IPC_CHANNELS.QUIT_APP),
 
   // Events

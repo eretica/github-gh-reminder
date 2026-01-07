@@ -55,6 +55,7 @@ export interface IpcApi {
 
   // Windows
   openSettings(): Promise<void>;
+  closeSettings(): Promise<void>;
   quitApp(): Promise<void>;
 
   // Events
@@ -74,5 +75,6 @@ export const IPC_CHANNELS = {
   PR_OPEN: "pr:open",
   PR_UPDATED: "pr:updated",
   OPEN_SETTINGS: "window:open-settings",
+  CLOSE_SETTINGS: "window:close-settings",
   QUIT_APP: "app:quit",
 } as const;

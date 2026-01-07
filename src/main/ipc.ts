@@ -200,6 +200,11 @@ export function setupIpcHandlers(): void {
     createSettingsWindow();
   });
 
+  ipcMain.handle(IPC_CHANNELS.CLOSE_SETTINGS, async (event): Promise<void> => {
+    const window = BrowserWindow.fromWebContents(event.sender);
+    window?.close();
+  });
+
   ipcMain.handle(IPC_CHANNELS.QUIT_APP, async (): Promise<void> => {
     app.quit();
   });
