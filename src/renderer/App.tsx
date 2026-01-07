@@ -32,7 +32,9 @@ function App(): JSX.Element {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {currentPage === "settings" ? <SettingsPage /> : <MainPage />}
+      <div key={currentPage} className="animate-fadeIn">
+        {currentPage === "settings" ? <SettingsPage /> : <MainPage />}
+      </div>
     </div>
   );
 }

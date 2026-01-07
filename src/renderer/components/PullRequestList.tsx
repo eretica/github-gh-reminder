@@ -32,9 +32,9 @@ export function PullRequestList({
   // No repositories registered - show empty state with add button
   if (repositories.length === 0) {
     return (
-      <div className="text-center py-8 text-gray-500">
+      <div className="text-center py-8 text-gray-500 animate-fadeIn">
         <svg
-          className="w-12 h-12 mx-auto mb-3 text-gray-300"
+          className="w-12 h-12 mx-auto mb-3 text-gray-300 animate-scaleIn"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -52,7 +52,7 @@ export function PullRequestList({
         </p>
         <button
           onClick={handleOpenSettings}
-          className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
+          className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all duration-200 hover:scale-105 active:scale-95"
         >
           <svg
             className="w-4 h-4"
@@ -95,7 +95,7 @@ export function PullRequestList({
               </svg>
               <button
                 onClick={() => handleOpenRepository(repo.name)}
-                className="font-medium text-gray-900 hover:text-blue-600 hover:underline transition-colors"
+                className="font-medium text-gray-900 hover:text-blue-600 hover:underline transition-all duration-200"
               >
                 {repo.name}
               </button>
@@ -105,12 +105,14 @@ export function PullRequestList({
             </div>
             <div className="space-y-2 ml-1">
               {repoPRs.length > 0 ? (
-                repoPRs.map((pr) => (
-                  <PullRequestItem
+                repoPRs.map((pr, index) => (
+                  <div
                     key={pr.id}
-                    pullRequest={pr}
-                    onOpen={onOpenPR}
-                  />
+                    className="animate-slideIn"
+                    style={{ animationDelay: `${index * 50}ms` }}
+                  >
+                    <PullRequestItem pullRequest={pr} onOpen={onOpenPR} />
+                  </div>
                 ))
               ) : (
                 <div className="text-sm text-gray-400 py-2 pl-6 flex items-center gap-2">

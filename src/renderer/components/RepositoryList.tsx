@@ -60,7 +60,7 @@ export function RepositoryList({
         </h3>
         <button
           onClick={onAdd}
-          className="inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors"
+          className="inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-all duration-200 hover:scale-105 active:scale-95"
         >
           <svg
             className="w-4 h-4"
@@ -80,9 +80,9 @@ export function RepositoryList({
       </div>
 
       {repositories.length === 0 ? (
-        <div className="text-center py-8 text-gray-500">
+        <div className="text-center py-8 text-gray-500 animate-fadeIn">
           <svg
-            className="w-12 h-12 mx-auto mb-3 text-gray-300"
+            className="w-12 h-12 mx-auto mb-3 text-gray-300 animate-scaleIn"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"

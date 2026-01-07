@@ -44,7 +44,7 @@ export default function MainPage(): JSX.Element {
           {/* Settings button */}
           <button
             onClick={handleOpenSettings}
-            className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-200 rounded transition-colors"
+            className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-200 rounded transition-all duration-200 hover:scale-110 active:scale-95"
             title="Settings"
           >
             <svg
@@ -70,7 +70,7 @@ export default function MainPage(): JSX.Element {
           {/* Quit button */}
           <button
             onClick={handleQuit}
-            className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-gray-200 rounded transition-colors"
+            className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-gray-200 rounded transition-all duration-200 hover:scale-110 active:scale-95"
             title="Quit"
           >
             <svg
@@ -93,7 +93,7 @@ export default function MainPage(): JSX.Element {
       {/* Content */}
       <main className="flex-1 overflow-auto p-4">
         {error && (
-          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm animate-fadeIn">
             {error}
           </div>
         )}
@@ -119,10 +119,10 @@ export default function MainPage(): JSX.Element {
         <button
           onClick={refresh}
           disabled={loading}
-          className={`inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+          className={`inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium rounded-md transition-all duration-200 ${
             loading
               ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-              : "bg-blue-50 text-blue-600 hover:bg-blue-100"
+              : "bg-blue-50 text-blue-600 hover:bg-blue-100 hover:scale-105 active:scale-95"
           }`}
         >
           <svg

@@ -34,14 +34,14 @@ export function RepositoryItem({
     <div
       ref={setNodeRef}
       style={style}
-      className={`bg-white border border-gray-200 rounded-lg p-3 ${isDragging ? "shadow-lg" : ""}`}
+      className={`bg-white border border-gray-200 rounded-lg p-3 transition-shadow duration-200 ${isDragging ? "shadow-lg" : "hover:shadow-sm"}`}
     >
       <div className="flex items-center gap-3">
         {/* Drag handle */}
         <button
           {...attributes}
           {...listeners}
-          className="cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600"
+          className="cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600 transition-all duration-200 hover:scale-110"
           title="Drag to reorder"
         >
           <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
@@ -54,13 +54,13 @@ export function RepositoryItem({
           type="checkbox"
           checked={repository.enabled}
           onChange={(e) => onToggle(repository.id, e.target.checked)}
-          className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+          className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 transition-all duration-200"
         />
 
         {/* Repository info */}
         <div className="flex-1 min-w-0">
           <div
-            className={`font-medium truncate ${!repository.enabled ? "text-gray-400" : "text-gray-900"}`}
+            className={`font-medium truncate transition-colors duration-200 ${!repository.enabled ? "text-gray-400" : "text-gray-900"}`}
           >
             {repository.name}
           </div>
@@ -72,7 +72,7 @@ export function RepositoryItem({
         {/* Delete button */}
         <button
           onClick={() => onRemove(repository.id)}
-          className="text-gray-400 hover:text-red-500 transition-colors"
+          className="text-gray-400 hover:text-red-500 transition-all duration-200 hover:scale-110 active:scale-95"
           title="Remove repository"
         >
           <svg
