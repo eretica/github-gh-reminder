@@ -12,7 +12,9 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
+import { useState } from "react";
 import type { Repository } from "../../shared/types";
+import { ConfirmDialog } from "./ConfirmDialog";
 import { RepositoryItem } from "./RepositoryItem";
 
 interface RepositoryListProps {
@@ -30,6 +32,11 @@ export function RepositoryList({
   onReorder,
   onAdd,
 }: RepositoryListProps): JSX.Element {
+  const [confirmDelete, setConfirmDelete] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
+
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, {
@@ -49,6 +56,20 @@ export function RepositoryList({
       newOrder.splice(newIndex, 0, removed);
 
       onReorder(newOrder.map((r) => r.id));
+    }
+  };
+
+  const handleRemoveClick = (id: string): void => {
+    const repo = repositories.find((r) => r.id === id);
+    if (repo) {
+      setConfirmDelete({ id, name: repo.name });
+    }
+  };
+
+  const handleConfirmDelete = (): void => {
+    if (confirmDelete) {
+      onRemove(confirmDelete.id);
+      setConfirmDelete(null);
     }
   };
 
@@ -115,12 +136,24 @@ export function RepositoryList({
                   key={repo.id}
                   repository={repo}
                   onToggle={onToggle}
-                  onRemove={onRemove}
+                  onRemove={handleRemoveClick}
                 />
               ))}
             </div>
           </SortableContext>
         </DndContext>
+      )}
+
+      {confirmDelete && (
+        <ConfirmDialog
+          title="Delete Repository"
+          message={`Are you sure you want to remove "${confirmDelete.name}"? This action cannot be undone.`}
+          confirmLabel="Delete"
+          cancelLabel="Cancel"
+          variant="danger"
+          onConfirm={handleConfirmDelete}
+          onCancel={() => setConfirmDelete(null)}
+        />
       )}
     </div>
   );
