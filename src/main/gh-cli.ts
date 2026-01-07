@@ -11,8 +11,8 @@ export interface GHPullRequest {
   isDraft: boolean;
   state: string;
   reviewDecision: string | null;
-  reviewRequests: Array<{ __typename: string }>;
-  comments: Array<unknown>;
+  reviewRequests: Array<{ __typename: string; login?: string }>;
+  comments: Array<{ id: string }>;
   changedFiles: number;
   mergeable: string;
   statusCheckRollup: {

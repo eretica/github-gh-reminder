@@ -274,7 +274,16 @@ class PRScheduler {
       )
       .where(eq(schema.repositories.enabled, 1));
 
-    return results.map((item) => this.toFrontendPR(item.pr, item.repo.name));
+    // Fetch fresh GitHub data to populate extended fields
+    const prsWithGHData: PullRequest[] = [];
+
+    for (const item of results) {
+      const ghPRs = fetchReviewRequestedPRs(item.repo.path);
+      const ghPR = ghPRs.find((pr) => pr.number === item.pr.prNumber);
+      prsWithGHData.push(this.toFrontendPR(item.pr, item.repo.name, ghPR));
+    }
+
+    return prsWithGHData;
   }
 }
 

@@ -151,7 +151,7 @@ describe("gh-cli", () => {
 
       expect(result).toEqual(mockPRs);
       expect(mockExecSync).toHaveBeenCalledWith(
-        'gh pr list --search "review-requested:@me" --limit 100 --json number,title,url,author,createdAt',
+        'gh pr list --search "review-requested:@me" --limit 100 --json number,title,url,author,createdAt,isDraft,state,reviewDecision,reviewRequests,comments,changedFiles,mergeable,statusCheckRollup',
         {
           cwd: "/path/to/repo",
           encoding: "utf-8",

@@ -5,6 +5,25 @@ interface PullRequestItemProps {
   onOpen: (url: string) => void;
 }
 
+const CI_STATUS = {
+  SUCCESS: "SUCCESS",
+  FAILURE: "FAILURE",
+  ERROR: "ERROR",
+  PENDING: "PENDING",
+} as const;
+
+const REVIEW_DECISION = {
+  APPROVED: "APPROVED",
+  CHANGES_REQUESTED: "CHANGES_REQUESTED",
+  REVIEW_REQUIRED: "REVIEW_REQUIRED",
+} as const;
+
+const MERGEABLE_STATE = {
+  MERGEABLE: "MERGEABLE",
+  CONFLICTING: "CONFLICTING",
+  UNKNOWN: "UNKNOWN",
+} as const;
+
 function formatRelativeTime(dateString: string): string {
   const date = new Date(dateString);
   const now = new Date();
@@ -22,15 +41,15 @@ function formatRelativeTime(dateString: string): string {
 
 function getStatusColor(status: string | undefined): string {
   switch (status?.toUpperCase()) {
-    case "SUCCESS":
-    case "APPROVED":
+    case CI_STATUS.SUCCESS:
+    case REVIEW_DECISION.APPROVED:
       return "text-green-600";
-    case "FAILURE":
-    case "ERROR":
-    case "CHANGES_REQUESTED":
+    case CI_STATUS.FAILURE:
+    case CI_STATUS.ERROR:
+    case REVIEW_DECISION.CHANGES_REQUESTED:
       return "text-red-600";
-    case "PENDING":
-    case "REVIEW_REQUIRED":
+    case CI_STATUS.PENDING:
+    case REVIEW_DECISION.REVIEW_REQUIRED:
       return "text-yellow-600";
     default:
       return "text-gray-400";
@@ -43,12 +62,12 @@ function getReviewDecisionBadge(
   if (!reviewDecision) return null;
 
   const badges: Record<string, { label: string; color: string }> = {
-    APPROVED: { label: "Approved", color: "bg-green-100 text-green-700" },
-    CHANGES_REQUESTED: {
+    [REVIEW_DECISION.APPROVED]: { label: "Approved", color: "bg-green-100 text-green-700" },
+    [REVIEW_DECISION.CHANGES_REQUESTED]: {
       label: "Changes requested",
       color: "bg-red-100 text-red-700",
     },
-    REVIEW_REQUIRED: {
+    [REVIEW_DECISION.REVIEW_REQUIRED]: {
       label: "Review required",
       color: "bg-yellow-100 text-yellow-700",
     },
@@ -125,13 +144,13 @@ export function PullRequestItem({
                     fill="currentColor"
                     viewBox="0 0 20 20"
                   >
-                    {ciStatus === "SUCCESS" ? (
+                    {ciStatus === CI_STATUS.SUCCESS ? (
                       <path
                         fillRule="evenodd"
                         d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
                         clipRule="evenodd"
                       />
-                    ) : ciStatus === "FAILURE" || ciStatus === "ERROR" ? (
+                    ) : ciStatus === CI_STATUS.FAILURE || ciStatus === CI_STATUS.ERROR ? (
                       <path
                         fillRule="evenodd"
                         d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
@@ -202,7 +221,7 @@ export function PullRequestItem({
                     {pullRequest.reviewRequestsCount}
                   </span>
                 )}
-              {pullRequest.mergeable === "CONFLICTING" && (
+              {pullRequest.mergeable === MERGEABLE_STATE.CONFLICTING && (
                 <span
                   className="inline-flex items-center gap-1 text-red-600"
                   title="Has merge conflicts"
