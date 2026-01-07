@@ -6,6 +6,11 @@
     "output": "dist"
   },
   "files": ["out/**/*", "resources/**/*"],
+  "publish": {
+    "provider": "github",
+    "owner": "eretica",
+    "repo": "github_remainder"
+  },
   "mac": {
     "target": ["dmg", "zip"],
     "icon": "resources/icon.icns",
