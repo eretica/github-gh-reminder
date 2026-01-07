@@ -1,5 +1,5 @@
 import { join } from "node:path";
-import { nativeImage, Tray } from "electron";
+import { nativeImage, Tray, shell } from "electron";
 import type { PullRequest } from "../shared/types";
 import { createMainWindow, setTrayBounds } from "./windows";
 
@@ -32,9 +32,16 @@ export function createTray(): Tray {
   tray.setToolTip("PR Reminder");
 
   // Click to show window (no context menu)
+  // If there's only one PR, open it directly; otherwise show the menu window
   tray.on("click", (_event, bounds) => {
-    setTrayBounds(bounds);
-    createMainWindow();
+    if (currentPRs.length === 1) {
+      // Single PR: navigate directly to it
+      shell.openExternal(currentPRs[0].url);
+    } else {
+      // Multiple PRs or no PRs: show the menu window
+      setTrayBounds(bounds);
+      createMainWindow();
+    }
   });
 
   return tray;
