@@ -1,3 +1,4 @@
+import type React from "react";
 import type { PullRequest, Repository } from "../../shared/types";
 import { PullRequestItem } from "./PullRequestItem";
 
