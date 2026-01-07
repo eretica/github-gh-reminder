@@ -377,6 +377,7 @@ describe("PRScheduler", () => {
           title: "New PR",
           author: "testuser",
         }),
+        "normal", // priority parameter
       );
     });
 
@@ -544,6 +545,21 @@ describe("PRScheduler", () => {
 
   describe("sendReminders (via interval)", () => {
     it("sends reminders for PRs that need reminding", async () => {
+      const repo = {
+        name: "owner/repo",
+        id: "repo1",
+        path: "/path/to/repo",
+        enabled: 1,
+        order: 0,
+        createdAt: "2024-01-01",
+        updatedAt: "2024-01-01",
+        notifyOnNew: 1,
+        enableReminder: 1,
+        reminderIntervalHours: 1,
+        notificationPriority: "normal",
+        silent: 0,
+      };
+
       const prData = [
         {
           pr: {
@@ -557,16 +573,6 @@ describe("PRScheduler", () => {
             firstSeenAt: "2024-01-01T00:00:00Z",
             notifiedAt: null,
             lastRemindedAt: null, // Never reminded
-          },
-          repo: {
-            name: "owner/repo",
-            id: "repo1",
-            enabled: 1,
-            notifyOnNew: 1,
-            enableReminder: 1,
-            reminderIntervalHours: 1,
-            notificationPriority: "normal",
-            silent: 0,
           },
         },
       ];
@@ -582,12 +588,13 @@ describe("PRScheduler", () => {
       });
       mockInnerJoin.mockReturnValue({ where: mockWhere });
 
-      // Return empty for check repos, then PR data for reminders
+      // Return empty for checkAllRepositories, then repos and PR data for sendReminders
       let selectCallCount = 0;
       mockWhere.mockImplementation(() => {
         selectCallCount++;
         if (selectCallCount <= 1) return Promise.resolve([]); // checkAllRepositories - repos
-        return Promise.resolve(prData); // sendReminders queries
+        if (selectCallCount === 2) return Promise.resolve([repo]); // sendReminders - get all repos
+        return Promise.resolve(prData); // sendReminders - get PRs for each repo
       });
 
       const mockUpdateSet = vi.fn();
@@ -642,6 +649,21 @@ describe("PRScheduler", () => {
     });
 
     it("updates lastRemindedAt after sending reminders", async () => {
+      const repo = {
+        name: "owner/repo",
+        id: "repo1",
+        path: "/path/to/repo",
+        enabled: 1,
+        order: 0,
+        createdAt: "2024-01-01",
+        updatedAt: "2024-01-01",
+        notifyOnNew: 1,
+        enableReminder: 1,
+        reminderIntervalHours: 1,
+        notificationPriority: "normal",
+        silent: 0,
+      };
+
       const prData = [
         {
           pr: {
@@ -655,16 +677,6 @@ describe("PRScheduler", () => {
             firstSeenAt: "2024-01-01T00:00:00Z",
             notifiedAt: null,
             lastRemindedAt: null,
-          },
-          repo: {
-            name: "owner/repo",
-            id: "repo1",
-            enabled: 1,
-            notifyOnNew: 1,
-            enableReminder: 1,
-            reminderIntervalHours: 1,
-            notificationPriority: "normal",
-            silent: 0,
           },
         },
       ];
@@ -683,8 +695,9 @@ describe("PRScheduler", () => {
       let selectCallCount = 0;
       mockWhere.mockImplementation(() => {
         selectCallCount++;
-        if (selectCallCount <= 1) return Promise.resolve([]);
-        return Promise.resolve(prData);
+        if (selectCallCount <= 1) return Promise.resolve([]); // checkAllRepositories - repos
+        if (selectCallCount === 2) return Promise.resolve([repo]); // sendReminders - get all repos
+        return Promise.resolve(prData); // sendReminders - get PRs for each repo
       });
 
       const mockUpdateSet = vi.fn();
