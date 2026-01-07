@@ -6,7 +6,7 @@ import { createMainWindow, setTrayBounds } from "./windows";
 let tray: Tray | null = null;
 let currentPRs: PullRequest[] = [];
 
-function createTrayIcon(hasPRs: boolean): nativeImage {
+function createTrayIcon(hasPRs: boolean): Electron.NativeImage {
   // Show badge when there are PRs to review
   // - hasPRs: colored icon (light red bell with badge)
   // - no PRs: template image (auto-adjusts to light/dark mode)

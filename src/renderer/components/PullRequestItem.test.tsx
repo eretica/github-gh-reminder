@@ -1,8 +1,8 @@
 /**
  * @vitest-environment jsdom
  */
-import React from "react";
-import { render, screen, fireEvent } from "@testing-library/react";
+
+import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import type { PullRequest } from "../../shared/types";
 import { PullRequestItem } from "./PullRequestItem";
@@ -114,9 +114,7 @@ describe("PullRequestItem", () => {
     it("shows singular day for 1 day", () => {
       const oneDayAgoPR = {
         ...mockPR,
-        createdAt: new Date(
-          Date.now() - 1 * 24 * 60 * 60 * 1000,
-        ).toISOString(), // 1 day ago
+        createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(), // 1 day ago
       };
       const onOpen = vi.fn();
       render(<PullRequestItem pullRequest={oneDayAgoPR} onOpen={onOpen} />);

@@ -4,8 +4,8 @@ import {
   describe,
   expect,
   it,
-  vi,
   type Mock,
+  vi,
 } from "vitest";
 import type { Settings } from "../shared/types";
 
