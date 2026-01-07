@@ -6,14 +6,18 @@ import { createMainWindow, setTrayBounds } from "./windows";
 let tray: Tray | null = null;
 let currentPRs: PullRequest[] = [];
 
-function createTrayIcon(): nativeImage {
-  // Use template image for macOS menu bar (auto-adjusts to light/dark mode)
-  const iconPath = join(__dirname, "../../resources/trayTemplate.png");
+function createTrayIcon(hasPRs: boolean): nativeImage {
+  // Show badge when there are PRs to review
+  // - hasPRs: colored icon (light red bell with badge)
+  // - no PRs: template image (auto-adjusts to light/dark mode)
+  const iconFile = hasPRs ? "trayTemplate.png" : "trayTemplate-empty.png";
+  const iconPath = join(__dirname, "../../resources", iconFile);
 
   try {
     const icon = nativeImage.createFromPath(iconPath);
-    // Mark as template image for macOS
-    icon.setTemplateImage(true);
+    // Only use template image for empty state (allows system color adjustment)
+    // Colored icon (hasPRs) should not be template to preserve red color
+    icon.setTemplateImage(!hasPRs);
     return icon;
   } catch {
     // Fallback: create empty icon
@@ -24,7 +28,7 @@ function createTrayIcon(): nativeImage {
 export function createTray(): Tray {
   if (tray) return tray;
 
-  tray = new Tray(createTrayIcon());
+  tray = new Tray(createTrayIcon(false));
   tray.setToolTip("PR Reminder");
 
   // Click to show window (no context menu)
@@ -41,9 +45,13 @@ export function updateTrayMenu(prs: PullRequest[]): void {
 
   currentPRs = prs;
   const prCount = prs.length;
+  const hasPRs = prCount > 0;
+
+  // Update icon based on PR count (badge or no badge)
+  tray.setImage(createTrayIcon(hasPRs));
 
   // Update title with PR count (shown next to tray icon)
-  tray.setTitle(prCount > 0 ? `${prCount}` : "");
+  tray.setTitle(hasPRs ? `${prCount}` : "");
 }
 
 export function getCurrentPRs(): PullRequest[] {
