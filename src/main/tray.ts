@@ -1,10 +1,19 @@
 import { join } from "node:path";
-import { nativeImage, shell, Tray } from "electron";
+import { nativeImage, Tray } from "electron";
 import type { PullRequest } from "../shared/types";
 import { createMainWindow, setTrayBounds } from "./windows";
 
+// Dependencies interface for DI
+export interface TrayDeps {
+  createTrayInstance: (icon: Electron.NativeImage) => Electron.Tray;
+  createIcon: (hasPRs: boolean) => Electron.NativeImage;
+  setTrayBounds: (bounds: Electron.Rectangle) => void;
+  createMainWindow: () => void;
+}
+
 let tray: Tray | null = null;
 let currentPRs: PullRequest[] = [];
+let deps: TrayDeps | null = null;
 
 function createTrayIcon(hasPRs: boolean): Electron.NativeImage {
   // Show badge when there are PRs to review
@@ -25,37 +34,41 @@ function createTrayIcon(hasPRs: boolean): Electron.NativeImage {
   }
 }
 
-export function createTray(): Tray {
+// Default production dependencies
+const defaultDeps: TrayDeps = {
+  createTrayInstance: (icon) => new Tray(icon),
+  createIcon: createTrayIcon,
+  setTrayBounds,
+  createMainWindow,
+};
+
+export function createTray(injectedDeps: TrayDeps = defaultDeps): Tray {
   if (tray) return tray;
 
-  tray = new Tray(createTrayIcon(false));
+  deps = injectedDeps;
+  const icon = deps.createIcon(false);
+  tray = deps.createTrayInstance(icon) as Tray;
   tray.setToolTip("PR Reminder");
 
   // Click to show window (no context menu)
-  // If there's only one PR, open it directly; otherwise show the menu window
+  // Always show the menu window regardless of PR count
   tray.on("click", (_event, bounds) => {
-    if (currentPRs.length === 1) {
-      // Single PR: navigate directly to it
-      shell.openExternal(currentPRs[0].url);
-    } else {
-      // Multiple PRs or no PRs: show the menu window
-      setTrayBounds(bounds);
-      createMainWindow();
-    }
+    deps!.setTrayBounds(bounds);
+    deps!.createMainWindow();
   });
 
   return tray;
 }
 
 export function updateTrayMenu(prs: PullRequest[]): void {
-  if (!tray) return;
+  if (!tray || !deps) return;
 
   currentPRs = prs;
   const prCount = prs.length;
   const hasPRs = prCount > 0;
 
   // Update icon based on PR count (badge or no badge)
-  tray.setImage(createTrayIcon(hasPRs));
+  tray.setImage(deps.createIcon(hasPRs));
 
   // Update title with PR count (shown next to tray icon)
   tray.setTitle(hasPRs ? `${prCount}` : "");
@@ -70,6 +83,8 @@ export function destroyTray(): void {
     tray.destroy();
     tray = null;
   }
+  deps = null;
+  currentPRs = [];
 }
 
 export function getTray(): Tray | null {
