@@ -1,4 +1,3 @@
-import type React from "react";
 import type { PullRequest } from "../../shared/types";
 
 interface PullRequestItemProps {
@@ -27,7 +26,7 @@ export function PullRequestItem({
 }: PullRequestItemProps): JSX.Element {
   return (
     <div
-      className="bg-white border border-gray-200 rounded-lg p-3 hover:border-blue-300 hover:shadow-sm transition-all cursor-pointer group"
+      className="bg-white border border-gray-200 rounded-lg p-3 hover:border-blue-300 hover:shadow-md hover:scale-[1.02] transition-all duration-200 cursor-pointer group"
       onClick={() => onOpen(pullRequest.url)}
     >
       <div className="flex items-start justify-between gap-2">

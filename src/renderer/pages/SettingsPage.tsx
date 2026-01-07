@@ -46,32 +46,37 @@ export default function SettingsPage(): JSX.Element {
       <main className="flex-1 overflow-auto p-4">
         {/* Error messages */}
         {(reposError || settingsError) && (
-          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm animate-fadeIn">
             {reposError || settingsError}
           </div>
         )}
 
-        {activeTab === "repositories" &&
-          (reposLoading ? (
-            <div className="flex items-center justify-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-            </div>
-          ) : (
-            <RepositoryList
-              repositories={repositories}
-              onToggle={toggleRepository}
-              onRemove={removeRepository}
-              onReorder={reorderRepositories}
-              onAdd={addRepository}
-            />
-          ))}
+        {activeTab === "repositories" && (
+          <div className="animate-fadeIn">
+            {reposLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+              </div>
+            ) : (
+              <RepositoryList
+                repositories={repositories}
+                onToggle={toggleRepository}
+                onRemove={removeRepository}
+                onReorder={reorderRepositories}
+                onAdd={addRepository}
+              />
+            )}
+          </div>
+        )}
 
         {activeTab === "notifications" && (
-          <SettingsForm
-            settings={settings}
-            onSave={updateSettings}
-            loading={settingsLoading}
-          />
+          <div className="animate-fadeIn">
+            <SettingsForm
+              settings={settings}
+              onSave={updateSettings}
+              loading={settingsLoading}
+            />
+          </div>
         )}
       </main>
     </div>
