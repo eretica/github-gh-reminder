@@ -78,17 +78,28 @@ export function initDatabase(): ReturnType<typeof drizzle<typeof schema>> {
 
 function runMigrations(sqlite: Database.Database): void {
   // Check if the new notification columns exist, if not add them
-  const tableInfo = sqlite.pragma("table_info(repositories)");
-  const columns = tableInfo.map((col: { name: string }) => col.name);
+  const tableInfo = sqlite.pragma("table_info(repositories)") as Array<{
+    name: string;
+  }>;
+  const columns = tableInfo.map((col) => col.name);
 
   if (!columns.includes("notify_on_new")) {
-    sqlite.exec(`
-      ALTER TABLE repositories ADD COLUMN notify_on_new INTEGER NOT NULL DEFAULT 1;
-      ALTER TABLE repositories ADD COLUMN enable_reminder INTEGER NOT NULL DEFAULT 1;
-      ALTER TABLE repositories ADD COLUMN reminder_interval_hours INTEGER NOT NULL DEFAULT 1;
-      ALTER TABLE repositories ADD COLUMN notification_priority TEXT NOT NULL DEFAULT 'normal';
-      ALTER TABLE repositories ADD COLUMN silent INTEGER NOT NULL DEFAULT 0;
-    `);
+    // Execute each ALTER TABLE statement separately (SQLite limitation)
+    sqlite.exec(
+      "ALTER TABLE repositories ADD COLUMN notify_on_new INTEGER NOT NULL DEFAULT 1",
+    );
+    sqlite.exec(
+      "ALTER TABLE repositories ADD COLUMN enable_reminder INTEGER NOT NULL DEFAULT 1",
+    );
+    sqlite.exec(
+      "ALTER TABLE repositories ADD COLUMN reminder_interval_hours INTEGER NOT NULL DEFAULT 1",
+    );
+    sqlite.exec(
+      "ALTER TABLE repositories ADD COLUMN notification_priority TEXT NOT NULL DEFAULT 'normal'",
+    );
+    sqlite.exec(
+      "ALTER TABLE repositories ADD COLUMN silent INTEGER NOT NULL DEFAULT 0",
+    );
   }
 }
 

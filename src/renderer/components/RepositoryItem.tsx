@@ -1,6 +1,6 @@
-import { useState } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { useState } from "react";
 import type {
   Repository,
   RepositoryNotificationSettings,
@@ -12,7 +12,7 @@ interface RepositoryItemProps {
   onRemove: (id: string) => void;
   onUpdateNotificationSettings?: (
     id: string,
-    settings: Partial<RepositoryNotificationSettings>
+    settings: Partial<RepositoryNotificationSettings>,
   ) => void;
 }
 
@@ -174,11 +174,15 @@ export function RepositoryItem({
                 min="1"
                 max="168"
                 value={repository.reminderIntervalHours}
-                onChange={(e) =>
-                  onUpdateNotificationSettings(repository.id, {
-                    reminderIntervalHours: Number.parseInt(e.target.value),
-                  })
-                }
+                onChange={(e) => {
+                  const value = Number.parseInt(e.target.value, 10);
+                  // Validate input: must be a number and within range
+                  if (!Number.isNaN(value) && value >= 1 && value <= 168) {
+                    onUpdateNotificationSettings(repository.id, {
+                      reminderIntervalHours: value,
+                    });
+                  }
+                }}
                 className="w-20 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500"
               />
             </div>

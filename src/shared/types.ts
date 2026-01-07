@@ -59,7 +59,7 @@ export interface IpcApi {
   reorderRepositories(ids: string[]): Promise<void>;
   updateRepositoryNotificationSettings(
     id: string,
-    settings: Partial<RepositoryNotificationSettings>
+    settings: Partial<RepositoryNotificationSettings>,
   ): Promise<void>;
 
   // Settings

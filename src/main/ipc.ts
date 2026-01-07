@@ -170,8 +170,38 @@ export function setupIpcHandlers(): void {
       settings: Partial<RepositoryNotificationSettings>,
     ): Promise<void> => {
       const db = getDatabase();
-      const now = new Date().toISOString();
 
+      // Validate repository exists
+      const existing = await db
+        .select()
+        .from(schema.repositories)
+        .where(eq(schema.repositories.id, id));
+
+      if (existing.length === 0) {
+        throw new Error("Repository not found");
+      }
+
+      // Validate input
+      if (
+        settings.reminderIntervalHours !== undefined &&
+        (typeof settings.reminderIntervalHours !== "number" ||
+          settings.reminderIntervalHours < 1 ||
+          settings.reminderIntervalHours > 168 ||
+          !Number.isInteger(settings.reminderIntervalHours))
+      ) {
+        throw new Error("Reminder interval must be an integer between 1 and 168");
+      }
+
+      if (
+        settings.notificationPriority !== undefined &&
+        !["low", "normal", "high"].includes(settings.notificationPriority)
+      ) {
+        throw new Error(
+          "Notification priority must be 'low', 'normal', or 'high'",
+        );
+      }
+
+      const now = new Date().toISOString();
       const updateData: Record<string, unknown> = { updatedAt: now };
 
       if (settings.notifyOnNew !== undefined) {

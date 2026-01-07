@@ -26,7 +26,7 @@ interface RepositoryListProps {
   onAdd: () => void;
   onUpdateNotificationSettings?: (
     id: string,
-    settings: Partial<RepositoryNotificationSettings>
+    settings: Partial<RepositoryNotificationSettings>,
   ) => void;
 }
 

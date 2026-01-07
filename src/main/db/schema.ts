@@ -11,8 +11,12 @@ export const repositories = sqliteTable("repositories", {
   // Notification settings per repository
   notifyOnNew: integer("notify_on_new").notNull().default(1),
   enableReminder: integer("enable_reminder").notNull().default(1),
-  reminderIntervalHours: integer("reminder_interval_hours").notNull().default(1),
-  notificationPriority: text("notification_priority").notNull().default("normal"), // 'low' | 'normal' | 'high'
+  reminderIntervalHours: integer("reminder_interval_hours")
+    .notNull()
+    .default(1),
+  notificationPriority: text("notification_priority")
+    .notNull()
+    .default("normal"), // 'low' | 'normal' | 'high'
   silent: integer("silent").notNull().default(0), // Do Not Disturb mode
 });
 

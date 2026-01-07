@@ -14,7 +14,7 @@ interface UseRepositoriesReturn {
   reorderRepositories: (ids: string[]) => Promise<void>;
   updateNotificationSettings: (
     id: string,
-    settings: Partial<RepositoryNotificationSettings>
+    settings: Partial<RepositoryNotificationSettings>,
   ) => Promise<void>;
   refresh: () => Promise<void>;
 }
@@ -98,13 +98,23 @@ export function useRepositories(): UseRepositoriesReturn {
 
   const updateNotificationSettings = useCallback(
     async (id: string, settings: Partial<RepositoryNotificationSettings>) => {
+      // Store previous state for rollback on error
+      const previousState = repositories.find((r) => r.id === id);
+
       try {
         setError(null);
-        await window.api.updateRepositoryNotificationSettings(id, settings);
+        // Optimistically update UI
         setRepositories((prev) =>
           prev.map((r) => (r.id === id ? { ...r, ...settings } : r)),
         );
+        await window.api.updateRepositoryNotificationSettings(id, settings);
       } catch (err) {
+        // Rollback on error
+        if (previousState) {
+          setRepositories((prev) =>
+            prev.map((r) => (r.id === id ? previousState : r)),
+          );
+        }
         setError(
           err instanceof Error
             ? err.message
@@ -112,7 +122,7 @@ export function useRepositories(): UseRepositoriesReturn {
         );
       }
     },
-    [],
+    [repositories],
   );
 
   return {

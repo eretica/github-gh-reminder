@@ -1,4 +1,4 @@
-import { and, eq, lt } from "drizzle-orm";
+import { and, eq, isNull, lt, or } from "drizzle-orm";
 import { v4 as uuidv4 } from "uuid";
 import type { PullRequest, Settings } from "../shared/types";
 import { getDatabase } from "./db";
@@ -84,7 +84,7 @@ class PRScheduler {
 
   private async checkRepository(
     repo: schema.RepositoryRecord,
-    settings: Settings,
+    _settings: Settings,
   ): Promise<PullRequest[]> {
     const db = getDatabase();
     const ghPRs = fetchReviewRequestedPRs(repo.path);
@@ -144,7 +144,10 @@ class PRScheduler {
 
         // Send notification for new PR based on repository settings
         if (shouldNotifyOnNew) {
-          notifyNewPR(pr, repo.notificationPriority as "low" | "normal" | "high");
+          notifyNewPR(
+            pr,
+            repo.notificationPriority as "low" | "normal" | "high",
+          );
         }
 
         resultPRs.push(pr);
@@ -187,7 +190,7 @@ class PRScheduler {
         now.getTime() - repo.reminderIntervalHours * 60 * 60 * 1000,
       );
 
-      // Get all PRs for this repo that need reminders
+      // Get all PRs for this repo that need reminders (filter at database level)
       const prsToRemind = await db
         .select({
           pr: schema.pullRequests,
@@ -196,34 +199,17 @@ class PRScheduler {
         .where(
           and(
             eq(schema.pullRequests.repositoryId, repo.id),
-            lt(
-              schema.pullRequests.lastRemindedAt,
-              reminderThreshold.toISOString(),
+            or(
+              isNull(schema.pullRequests.lastRemindedAt),
+              lt(
+                schema.pullRequests.lastRemindedAt,
+                reminderThreshold.toISOString(),
+              ),
             ),
           ),
         );
 
-      // Also get PRs that have never been reminded
-      const neverRemindedPRs = await db
-        .select({
-          pr: schema.pullRequests,
-        })
-        .from(schema.pullRequests)
-        .where(
-          and(eq(schema.pullRequests.repositoryId, repo.id)),
-        );
-
-      const allPRsForRepo = [
-        ...prsToRemind.map((item) => ({ pr: item.pr, repo })),
-        ...neverRemindedPRs
-          .filter((item) => item.pr.lastRemindedAt === null)
-          .map((item) => ({ pr: item.pr, repo })),
-      ];
-
-      // Remove duplicates
-      const uniquePRsForRepo = Array.from(
-        new Map(allPRsForRepo.map((item) => [item.pr.id, item])).values(),
-      );
+      const uniquePRsForRepo = prsToRemind.map((item) => ({ pr: item.pr, repo }));
 
       if (uniquePRsForRepo.length > 0) {
         prsToRemindByRepo.set(repo.id, uniquePRsForRepo);
