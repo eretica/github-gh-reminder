@@ -48,6 +48,9 @@ describe("Tray", () => {
   };
 
   beforeEach(() => {
+    // Destroy any existing tray from previous tests
+    destroyTray();
+
     vi.clearAllMocks();
 
     // Mock tray instance
@@ -219,7 +222,19 @@ describe("Tray", () => {
       createTray();
       destroyTray();
 
+      // Clear the mock call count
       mockTray.mockClear();
+
+      // Set up a new mock instance for the next createTray call
+      const newMockTrayInstance = {
+        setToolTip: vi.fn(),
+        on: vi.fn(),
+        setImage: vi.fn(),
+        setTitle: vi.fn(),
+        destroy: vi.fn(),
+      };
+      mockTray.mockReturnValue(newMockTrayInstance);
+
       createTray();
 
       expect(mockTray).toHaveBeenCalledTimes(1);
