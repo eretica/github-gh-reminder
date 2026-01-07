@@ -78,9 +78,17 @@ export function initDatabase(): ReturnType<typeof drizzle<typeof schema>> {
 
 function runMigrations(sqlite: Database.Database): void {
   // Check if the new notification columns exist, if not add them
-  const tableInfo = sqlite.pragma("table_info(repositories)") as Array<{
-    name: string;
-  }>;
+  const tableInfo = sqlite.pragma("table_info(repositories)") as
+    | Array<{
+        name: string;
+      }>
+    | undefined;
+
+  if (!tableInfo) {
+    // Table doesn't exist yet or pragma failed, skip migration
+    return;
+  }
+
   const columns = tableInfo.map((col) => col.name);
 
   if (!columns.includes("notify_on_new")) {
