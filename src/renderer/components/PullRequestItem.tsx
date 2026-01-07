@@ -143,7 +143,6 @@ export function PullRequestItem({
                 <span
                   className={`inline-flex items-center gap-1 ${getStatusColor(ciStatus)}`}
                   title={`CI Status: ${ciStatus}`}
-                  aria-label={`CI Status: ${ciStatus}`}
                 >
                   <svg
                     className="w-3 h-3"
@@ -181,7 +180,6 @@ export function PullRequestItem({
                   <span
                     className="inline-flex items-center gap-1"
                     title="Comments"
-                    aria-label={`${pullRequest.commentsCount} comments`}
                   >
                     <svg
                       className="w-3 h-3"
@@ -202,7 +200,6 @@ export function PullRequestItem({
                   <span
                     className="inline-flex items-center gap-1"
                     title="Changed files"
-                    aria-label={`${pullRequest.changedFiles} changed files`}
                   >
                     <svg
                       className="w-3 h-3"
@@ -219,7 +216,6 @@ export function PullRequestItem({
                   <span
                     className="inline-flex items-center gap-1"
                     title="Reviewers requested"
-                    aria-label={`${pullRequest.reviewRequestsCount} reviewers requested`}
                   >
                     <svg
                       className="w-3 h-3"
@@ -235,7 +231,6 @@ export function PullRequestItem({
                 <span
                   className="inline-flex items-center gap-1 text-red-600"
                   title="Has merge conflicts"
-                  aria-label="This pull request has merge conflicts"
                 >
                   <svg
                     className="w-3 h-3"
