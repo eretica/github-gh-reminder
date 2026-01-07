@@ -164,12 +164,15 @@ export function SettingsForm({
         <button
           onClick={handleSave}
           disabled={!hasChanges || saving}
-          className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+          className={`inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
             hasChanges && !saving
               ? "bg-blue-600 text-white hover:bg-blue-700"
               : "bg-gray-100 text-gray-400 cursor-not-allowed"
           }`}
         >
+          {saving && (
+            <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />
+          )}
           {saving ? "Saving..." : "Save"}
         </button>
         {hasChanges && !saving && (

@@ -2,8 +2,10 @@ import { useState } from "react";
 import { RepositoryList } from "../components/RepositoryList";
 import { SettingsForm } from "../components/SettingsForm";
 import { Tabs } from "../components/Tabs";
+import { Toast } from "../components/Toast";
 import { useRepositories } from "../hooks/useRepositories";
 import { useSettings } from "../hooks/useSettings";
+import { useToast } from "../hooks/useToast";
 
 const TABS = [
   { id: "repositories", label: "Repositories" },
@@ -12,6 +14,7 @@ const TABS = [
 
 export default function SettingsPage(): JSX.Element {
   const [activeTab, setActiveTab] = useState("repositories");
+  const { toasts, showToast, hideToast } = useToast();
 
   const {
     repositories,
@@ -32,6 +35,76 @@ export default function SettingsPage(): JSX.Element {
 
   const handleClose = (): void => {
     window.api.closeSettings();
+  };
+
+  const handleAddRepository = async (): Promise<void> => {
+    try {
+      await addRepository();
+      showToast("Repository added successfully", "success");
+    } catch (error) {
+      showToast(
+        error instanceof Error ? error.message : "Failed to add repository",
+        "error",
+      );
+    }
+  };
+
+  const handleRemoveRepository = async (id: string): Promise<void> => {
+    try {
+      await removeRepository(id);
+      showToast("Repository removed successfully", "success");
+    } catch (error) {
+      showToast(
+        error instanceof Error ? error.message : "Failed to remove repository",
+        "error",
+      );
+    }
+  };
+
+  const handleToggleRepository = async (
+    id: string,
+    enabled: boolean,
+  ): Promise<void> => {
+    try {
+      await toggleRepository(id, enabled);
+      showToast(
+        `Repository ${enabled ? "enabled" : "disabled"} successfully`,
+        "success",
+      );
+    } catch (error) {
+      showToast(
+        error instanceof Error ? error.message : "Failed to toggle repository",
+        "error",
+      );
+    }
+  };
+
+  const handleReorderRepositories = async (ids: string[]): Promise<void> => {
+    try {
+      await reorderRepositories(ids);
+      showToast("Repository order updated", "success");
+    } catch (error) {
+      showToast(
+        error instanceof Error
+          ? error.message
+          : "Failed to reorder repositories",
+        "error",
+      );
+    }
+  };
+
+  const handleUpdateSettings = async (
+    newSettings: typeof settings,
+  ): Promise<void> => {
+    try {
+      await updateSettings(newSettings);
+      showToast("Settings saved successfully", "success");
+    } catch (error) {
+      showToast(
+        error instanceof Error ? error.message : "Failed to save settings",
+        "error",
+      );
+    }
   };
 
   return (
@@ -83,10 +156,10 @@ export default function SettingsPage(): JSX.Element {
             ) : (
               <RepositoryList
                 repositories={repositories}
-                onToggle={toggleRepository}
-                onRemove={removeRepository}
-                onReorder={reorderRepositories}
-                onAdd={addRepository}
+                onToggle={handleToggleRepository}
+                onRemove={handleRemoveRepository}
+                onReorder={handleReorderRepositories}
+                onAdd={handleAddRepository}
               />
             )}
           </div>
@@ -96,12 +169,21 @@ export default function SettingsPage(): JSX.Element {
           <div className="animate-fadeIn">
             <SettingsForm
               settings={settings}
-              onSave={updateSettings}
+              onSave={handleUpdateSettings}
               loading={settingsLoading}
             />
           </div>
         )}
       </main>
+
+      {toasts.map((toast) => (
+        <Toast
+          key={toast.id}
+          message={toast.message}
+          type={toast.type}
+          onClose={() => hideToast(toast.id)}
+        />
+      ))}
     </div>
   );
 }
