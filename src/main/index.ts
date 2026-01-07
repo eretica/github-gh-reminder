@@ -23,8 +23,8 @@ if (!gotTheLock) {
   });
 
   // Don't quit when all windows are closed (tray app)
-  app.on("window-all-closed", (e: Event) => {
-    e.preventDefault();
+  app.on("window-all-closed", () => {
+    // Do nothing - keep the app running in the tray
   });
 
   app.whenReady().then(async () => {

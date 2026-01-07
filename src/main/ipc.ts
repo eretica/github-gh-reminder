@@ -99,7 +99,7 @@ export function setupIpcHandlers(): void {
         path: newRepo.path,
         name: newRepo.name,
         enabled: true,
-        order: newRepo.order,
+        order: newRepo.order!,
         createdAt: now,
         updatedAt: now,
       };

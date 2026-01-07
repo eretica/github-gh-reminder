@@ -14,7 +14,7 @@
     "build:linux": "electron-vite build && electron-builder --linux",
     "lint": "biome check",
     "lint:fix": "biome check --write",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
