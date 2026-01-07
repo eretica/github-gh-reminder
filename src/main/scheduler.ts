@@ -247,6 +247,15 @@ class PRScheduler {
       firstSeenAt: pr.firstSeenAt,
       notifiedAt: pr.notifiedAt,
       lastRemindedAt: pr.lastRemindedAt,
+      // Extended PR details from GitHub
+      isDraft: ghPR?.isDraft,
+      state: ghPR?.state,
+      reviewDecision: ghPR?.reviewDecision,
+      reviewRequestsCount: ghPR?.reviewRequests?.length,
+      commentsCount: ghPR?.comments?.length,
+      changedFiles: ghPR?.changedFiles,
+      mergeable: ghPR?.mergeable,
+      statusCheckRollup: ghPR?.statusCheckRollup,
     };
   }
 
@@ -265,7 +274,38 @@ class PRScheduler {
       )
       .where(eq(schema.repositories.enabled, 1));
 
-    return results.map((item) => this.toFrontendPR(item.pr, item.repo.name));
+    // Fetch fresh GitHub data to populate extended fields
+    // Group PRs by repository to avoid N+1 query problem
+    const prsByRepo = new Map<string, typeof results>();
+    for (const item of results) {
+      if (!prsByRepo.has(item.repo.id)) {
+        prsByRepo.set(item.repo.id, []);
+      }
+      prsByRepo.get(item.repo.id)!.push(item);
+    }
+
+    // Fetch GitHub data once per repository (not once per PR)
+    const prsWithGHData: PullRequest[] = [];
+    for (const [, items] of prsByRepo) {
+      const repo = items[0].repo;
+      try {
+        const ghPRs = fetchReviewRequestedPRs(repo.path);
+        const ghPRMap = new Map(ghPRs.map((pr) => [pr.number, pr]));
+
+        for (const item of items) {
+          const ghPR = ghPRMap.get(item.pr.prNumber);
+          prsWithGHData.push(this.toFrontendPR(item.pr, repo.name, ghPR));
+        }
+      } catch (error) {
+        console.error(`Failed to fetch GitHub data for ${repo.name}:`, error);
+        // Fall back to DB data without extended fields
+        for (const item of items) {
+          prsWithGHData.push(this.toFrontendPR(item.pr, repo.name));
+        }
+      }
+    }
+
+    return prsWithGHData;
   }
 }
 

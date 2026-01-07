@@ -8,11 +8,21 @@ export interface GHPullRequest {
     login: string;
   };
   createdAt: string;
+  isDraft: boolean;
+  state: string;
+  reviewDecision: string | null;
+  reviewRequests: Array<{ __typename: string; login?: string }>;
+  comments: Array<{ id: string }>;
+  changedFiles: number;
+  mergeable: string;
+  statusCheckRollup: {
+    state: string;
+  } | null;
 }
 
 export function fetchReviewRequestedPRs(repoPath: string): GHPullRequest[] {
   try {
-    const command = `gh pr list --search "review-requested:@me" --limit 100 --json number,title,url,author,createdAt`;
+    const command = `gh pr list --search "review-requested:@me" --limit 100 --json number,title,url,author,createdAt,isDraft,state,reviewDecision,reviewRequests,comments,changedFiles,mergeable,statusCheckRollup`;
     const result = execSync(command, {
       cwd: repoPath,
       encoding: "utf-8",

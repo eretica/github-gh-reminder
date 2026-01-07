@@ -20,6 +20,17 @@ export interface PullRequest {
   firstSeenAt: string;
   notifiedAt: string | null;
   lastRemindedAt: string | null;
+  // Extended PR details
+  isDraft?: boolean;
+  state?: string;
+  reviewDecision?: string | null;
+  reviewRequestsCount?: number;
+  commentsCount?: number;
+  changedFiles?: number;
+  mergeable?: string;
+  statusCheckRollup?: {
+    state: string;
+  } | null;
 }
 
 export interface Settings {

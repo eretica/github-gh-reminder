@@ -144,4 +144,181 @@ describe("PullRequestItem", () => {
 
     expect(screen.getByTitle("Open in browser")).toBeInTheDocument();
   });
+
+  describe("Extended PR details", () => {
+    it("renders draft badge when PR is draft", () => {
+      const draftPR: PullRequest = {
+        ...mockPR,
+        isDraft: true,
+      };
+      const onOpen = vi.fn();
+      render(<PullRequestItem pullRequest={draftPR} onOpen={onOpen} />);
+
+      expect(screen.getByText("Draft")).toBeInTheDocument();
+    });
+
+    it("does not render draft badge when PR is not draft", () => {
+      const nonDraftPR: PullRequest = {
+        ...mockPR,
+        isDraft: false,
+      };
+      const onOpen = vi.fn();
+      render(<PullRequestItem pullRequest={nonDraftPR} onOpen={onOpen} />);
+
+      expect(screen.queryByText("Draft")).not.toBeInTheDocument();
+    });
+
+    it("renders approved badge when review decision is approved", () => {
+      const approvedPR: PullRequest = {
+        ...mockPR,
+        reviewDecision: "APPROVED",
+      };
+      const onOpen = vi.fn();
+      render(<PullRequestItem pullRequest={approvedPR} onOpen={onOpen} />);
+
+      expect(screen.getByText("Approved")).toBeInTheDocument();
+    });
+
+    it("renders changes requested badge when review decision is changes requested", () => {
+      const changesRequestedPR: PullRequest = {
+        ...mockPR,
+        reviewDecision: "CHANGES_REQUESTED",
+      };
+      const onOpen = vi.fn();
+      render(
+        <PullRequestItem pullRequest={changesRequestedPR} onOpen={onOpen} />,
+      );
+
+      expect(screen.getByText("Changes requested")).toBeInTheDocument();
+    });
+
+    it("renders review required badge when review decision is review required", () => {
+      const reviewRequiredPR: PullRequest = {
+        ...mockPR,
+        reviewDecision: "REVIEW_REQUIRED",
+      };
+      const onOpen = vi.fn();
+      render(
+        <PullRequestItem pullRequest={reviewRequiredPR} onOpen={onOpen} />,
+      );
+
+      expect(screen.getByText("Review required")).toBeInTheDocument();
+    });
+
+    it("renders CI status indicator with success state", () => {
+      const successPR: PullRequest = {
+        ...mockPR,
+        statusCheckRollup: { state: "SUCCESS" },
+      };
+      const onOpen = vi.fn();
+      render(<PullRequestItem pullRequest={successPR} onOpen={onOpen} />);
+
+      expect(screen.getByText("SUCCESS")).toBeInTheDocument();
+    });
+
+    it("renders CI status indicator with failure state", () => {
+      const failurePR: PullRequest = {
+        ...mockPR,
+        statusCheckRollup: { state: "FAILURE" },
+      };
+      const onOpen = vi.fn();
+      render(<PullRequestItem pullRequest={failurePR} onOpen={onOpen} />);
+
+      expect(screen.getByText("FAILURE")).toBeInTheDocument();
+    });
+
+    it("renders comments count when available", () => {
+      const prWithComments: PullRequest = {
+        ...mockPR,
+        commentsCount: 5,
+      };
+      const onOpen = vi.fn();
+      render(<PullRequestItem pullRequest={prWithComments} onOpen={onOpen} />);
+
+      expect(screen.getByText("5")).toBeInTheDocument();
+      expect(screen.getByTitle("Comments")).toBeInTheDocument();
+    });
+
+    it("does not render comments count when zero", () => {
+      const prWithNoComments: PullRequest = {
+        ...mockPR,
+        commentsCount: 0,
+      };
+      const onOpen = vi.fn();
+      render(
+        <PullRequestItem pullRequest={prWithNoComments} onOpen={onOpen} />,
+      );
+
+      expect(screen.queryByTitle("Comments")).not.toBeInTheDocument();
+    });
+
+    it("renders changed files count when available", () => {
+      const prWithFiles: PullRequest = {
+        ...mockPR,
+        changedFiles: 10,
+      };
+      const onOpen = vi.fn();
+      render(<PullRequestItem pullRequest={prWithFiles} onOpen={onOpen} />);
+
+      expect(screen.getByText("10")).toBeInTheDocument();
+      expect(screen.getByTitle("Changed files")).toBeInTheDocument();
+    });
+
+    it("renders reviewer requests count when available", () => {
+      const prWithReviewers: PullRequest = {
+        ...mockPR,
+        reviewRequestsCount: 3,
+      };
+      const onOpen = vi.fn();
+      render(<PullRequestItem pullRequest={prWithReviewers} onOpen={onOpen} />);
+
+      expect(screen.getByText("3")).toBeInTheDocument();
+      expect(screen.getByTitle("Reviewers requested")).toBeInTheDocument();
+    });
+
+    it("renders merge conflict warning when PR has conflicts", () => {
+      const conflictingPR: PullRequest = {
+        ...mockPR,
+        mergeable: "CONFLICTING",
+      };
+      const onOpen = vi.fn();
+      render(<PullRequestItem pullRequest={conflictingPR} onOpen={onOpen} />);
+
+      expect(screen.getByText("CONFLICTS")).toBeInTheDocument();
+      expect(screen.getByTitle("Has merge conflicts")).toBeInTheDocument();
+    });
+
+    it("does not render merge conflict warning when PR is mergeable", () => {
+      const mergeablePR: PullRequest = {
+        ...mockPR,
+        mergeable: "MERGEABLE",
+      };
+      const onOpen = vi.fn();
+      render(<PullRequestItem pullRequest={mergeablePR} onOpen={onOpen} />);
+
+      expect(screen.queryByText("CONFLICTS")).not.toBeInTheDocument();
+    });
+
+    it("renders multiple extended details at once", () => {
+      const fullDetailsPR: PullRequest = {
+        ...mockPR,
+        isDraft: true,
+        reviewDecision: "APPROVED",
+        statusCheckRollup: { state: "SUCCESS" },
+        commentsCount: 5,
+        changedFiles: 10,
+        reviewRequestsCount: 2,
+        mergeable: "MERGEABLE",
+      };
+      const onOpen = vi.fn();
+      render(<PullRequestItem pullRequest={fullDetailsPR} onOpen={onOpen} />);
+
+      expect(screen.getByText("Draft")).toBeInTheDocument();
+      expect(screen.getByText("Approved")).toBeInTheDocument();
+      expect(screen.getByText("SUCCESS")).toBeInTheDocument();
+      expect(screen.getByText("5")).toBeInTheDocument();
+      expect(screen.getByText("10")).toBeInTheDocument();
+      expect(screen.getByText("2")).toBeInTheDocument();
+    });
+  });
 });
