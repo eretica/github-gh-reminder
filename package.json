@@ -1,12 +1,12 @@
 {
-  "name": "pr-reminder",
+  "name": "github-pr-reminder",
   "version": "1.0.0",
   "type": "module",
   "description": "GitHub Pull Request Reminder - A tray application to notify you of pending PR reviews",
   "main": "./out/main/index.js",
   "repository": {
     "type": "git",
-    "url": "https://github.com/eretica/github_remainder.git"
+    "url": "https://github.com/eretica/github_gh_reminder.git"
   },
   "scripts": {
     "dev": "electron-vite dev",

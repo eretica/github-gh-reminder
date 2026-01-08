@@ -112,7 +112,7 @@ export default function SettingsPage(): JSX.Element {
       {/* Header */}
       <header className="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between">
         <h1 className="text-lg font-semibold text-gray-900">
-          PR Reminder Settings
+          GitHub PR Reminder Settings
         </h1>
         <button
           onClick={handleClose}
