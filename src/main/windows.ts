@@ -112,6 +112,7 @@ export function createSettingsWindow(): BrowserWindow {
     minWidth: 500,
     minHeight: 400,
     show: false,
+    skipTaskbar: true,
     autoHideMenuBar: true,
     title: "PR Reminder - Settings",
     webPreferences: {
