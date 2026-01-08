@@ -121,6 +121,21 @@ describe("IPC Update Handlers", () => {
       const { autoUpdater } = await import("electron-updater");
       expect(vi.mocked(autoUpdater.checkForUpdates)).toHaveBeenCalled();
     });
+
+    it("should handle errors when check fails", async () => {
+      const handler = handleCallbacks.get(IPC_CHANNELS.UPDATE_CHECK);
+      expect(handler).toBeDefined();
+
+      // Mock checkForUpdates to throw error
+      const { autoUpdater } = await import("electron-updater");
+      vi.mocked(autoUpdater.checkForUpdates).mockRejectedValueOnce(
+        new Error("Network error"),
+      );
+
+      await expect(handler!()).rejects.toThrow(
+        "アップデートの確認に失敗しました",
+      );
+    });
   });
 
   describe("UPDATE_INSTALL handler", () => {
@@ -140,6 +155,21 @@ describe("IPC Update Handlers", () => {
       // Access via named export
       const { autoUpdater } = await import("electron-updater");
       expect(vi.mocked(autoUpdater.quitAndInstall)).toHaveBeenCalled();
+    });
+
+    it("should handle errors when install fails", async () => {
+      const handler = handleCallbacks.get(IPC_CHANNELS.UPDATE_INSTALL);
+      expect(handler).toBeDefined();
+
+      // Mock quitAndInstall to throw error
+      const { autoUpdater } = await import("electron-updater");
+      vi.mocked(autoUpdater.quitAndInstall).mockImplementationOnce(() => {
+        throw new Error("Install failed");
+      });
+
+      await expect(handler!()).rejects.toThrow(
+        "アップデートのインストールに失敗しました",
+      );
     });
   });
 });

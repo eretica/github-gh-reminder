@@ -1,6 +1,7 @@
 import { basename } from "node:path";
 import { eq } from "drizzle-orm";
 import { app, BrowserWindow, dialog, ipcMain, shell } from "electron";
+import log from "electron-log/main.js";
 import pkg from "electron-updater";
 
 const { autoUpdater } = pkg;
@@ -215,11 +216,21 @@ export function setupIpcHandlers(): void {
 
   // Update handlers
   ipcMain.handle(IPC_CHANNELS.UPDATE_CHECK, async (): Promise<void> => {
-    autoUpdater.checkForUpdates();
+    try {
+      await autoUpdater.checkForUpdates();
+    } catch (error) {
+      log.error("Failed to check for updates:", error);
+      throw new Error("アップデートの確認に失敗しました");
+    }
   });
 
   ipcMain.handle(IPC_CHANNELS.UPDATE_INSTALL, async (): Promise<void> => {
-    autoUpdater.quitAndInstall();
+    try {
+      autoUpdater.quitAndInstall();
+    } catch (error) {
+      log.error("Failed to install update:", error);
+      throw new Error("アップデートのインストールに失敗しました");
+    }
   });
 }
 
