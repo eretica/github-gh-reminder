@@ -1,6 +1,15 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { PullRequest } from "../shared/types";
 
+// Mock electron-updater
+vi.mock("electron-updater", () => ({
+  default: {
+    checkForUpdates: vi.fn(),
+    quitAndInstall: vi.fn(),
+    on: vi.fn(),
+  },
+}));
+
 // Mock electron to prevent import errors
 vi.mock("electron", () => ({
   nativeImage: {
@@ -8,14 +17,22 @@ vi.mock("electron", () => ({
     createEmpty: vi.fn().mockReturnValue({ setTemplateImage: vi.fn() }),
   },
   Tray: vi.fn(),
+  Menu: {
+    buildFromTemplate: vi.fn().mockReturnValue({}),
+  },
+  app: {
+    quit: vi.fn(),
+  },
 }));
 
 // Mock windows module to prevent import errors
 vi.mock("./windows", () => ({
   createMainWindow: vi.fn(),
+  createSettingsWindow: vi.fn(),
   setTrayBounds: vi.fn(),
 }));
 
+import { Menu } from "electron";
 import {
   createTray,
   destroyTray,
@@ -37,6 +54,7 @@ function createMockDeps() {
     setToolTip: vi.fn(),
     setImage: vi.fn(),
     setTitle: vi.fn(),
+    setContextMenu: vi.fn(),
     destroy: vi.fn(),
     getBounds: vi.fn().mockReturnValue({ x: 100, y: 0, width: 22, height: 22 }),
     on: vi.fn(
@@ -244,6 +262,29 @@ describe("tray", () => {
       updateTrayMenu([]);
 
       expect(mockDeps.mockTray.setTitle).not.toHaveBeenCalled();
+    });
+
+    it("sets context menu with update check option", () => {
+      createTray(mockDeps);
+
+      updateTrayMenu([]);
+
+      expect(mockDeps.mockTray.setContextMenu).toHaveBeenCalled();
+    });
+
+    it("builds context menu with correct items", () => {
+      createTray(mockDeps);
+
+      updateTrayMenu([]);
+
+      expect(Menu.buildFromTemplate).toHaveBeenCalledWith(
+        expect.arrayContaining([
+          expect.objectContaining({ label: "設定を開く" }),
+          expect.objectContaining({ label: "アップデートを確認" }),
+          expect.objectContaining({ type: "separator" }),
+          expect.objectContaining({ label: "終了" }),
+        ]),
+      );
     });
   });
 

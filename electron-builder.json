@@ -1,7 +1,7 @@
 {
   "$schema": "https://raw.githubusercontent.com/electron-userland/electron-builder/master/packages/app-builder-lib/scheme.json",
   "appId": "com.pr-reminder.app",
-  "productName": "PR Reminder",
+  "productName": "pr-reminder",
   "directories": {
     "output": "dist"
   },

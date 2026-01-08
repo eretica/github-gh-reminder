@@ -116,10 +116,18 @@ autoUpdater.on("update-available", (info) => {
 
 autoUpdater.on("update-not-available", () => {
   log.info("Update not available.");
+  new Notification({
+    title: "最新版です",
+    body: "現在のバージョンが最新です。",
+  }).show();
 });
 
 autoUpdater.on("error", (err) => {
   log.error("Error in auto-updater.", err);
+  new Notification({
+    title: "アップデート確認エラー",
+    body: "アップデートの確認中にエラーが発生しました。",
+  }).show();
 });
 
 autoUpdater.on("download-progress", (progressObj) => {

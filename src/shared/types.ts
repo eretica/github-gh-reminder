@@ -69,6 +69,10 @@ export interface IpcApi {
   closeSettings(): Promise<void>;
   quitApp(): Promise<void>;
 
+  // Updates
+  checkForUpdates(): Promise<void>;
+  quitAndInstall(): Promise<void>;
+
   // Events
   onPullRequestsUpdated(callback: (prs: PullRequest[]) => void): () => void;
 }
@@ -88,4 +92,6 @@ export const IPC_CHANNELS = {
   OPEN_SETTINGS: "window:open-settings",
   CLOSE_SETTINGS: "window:close-settings",
   QUIT_APP: "app:quit",
+  UPDATE_CHECK: "update:check",
+  UPDATE_INSTALL: "update:install",
 } as const;
