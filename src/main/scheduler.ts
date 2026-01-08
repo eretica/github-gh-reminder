@@ -141,7 +141,7 @@ class PRScheduler {
 
         // Send notification for new PR
         if (settings.notifyOnNew) {
-          notifyNewPR(pr);
+          await notifyNewPR(pr);
         }
 
         resultPRs.push(pr);
@@ -218,7 +218,7 @@ class PRScheduler {
     );
 
     // Send reminder notification
-    notifyReminder(frontendPRs);
+    await notifyReminder(frontendPRs);
 
     // Update last reminded time
     const nowStr = now.toISOString();

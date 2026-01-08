@@ -18,6 +18,22 @@ vi.mock("./tray", () => ({
   getTray: vi.fn(),
 }));
 
+// Mock database module to prevent import errors
+vi.mock("./db", () => ({
+  getDatabase: vi.fn(() => ({
+    select: vi.fn().mockReturnValue({
+      from: vi.fn().mockResolvedValue([
+        { key: "notificationSound", value: "true" },
+        { key: "notificationUrgency", value: '"normal"' },
+      ]),
+    }),
+  })),
+}));
+
+vi.mock("./db/schema", () => ({
+  settings: {},
+}));
+
 import {
   type NotifierDeps,
   notifyError,
@@ -32,11 +48,20 @@ function createMockDeps(): NotifierDeps & {
     show: ReturnType<typeof vi.fn>;
   };
   clickHandler: (() => void) | null;
-  lastOptions: { title: string; body: string; silent: boolean } | null;
+  lastOptions: {
+    title: string;
+    body: string;
+    silent: boolean;
+    urgency?: "normal" | "critical" | "low";
+  } | null;
 } {
   let clickHandler: (() => void) | null = null;
-  let lastOptions: { title: string; body: string; silent: boolean } | null =
-    null;
+  let lastOptions: {
+    title: string;
+    body: string;
+    silent: boolean;
+    urgency?: "normal" | "critical" | "low";
+  } | null = null;
 
   const mockNotification = {
     on: vi.fn((event: string, handler: () => void) => {
@@ -88,24 +113,25 @@ describe("notifier", () => {
       lastRemindedAt: null,
     };
 
-    it("creates notification with correct title and body", () => {
-      notifyNewPR(mockPR, mockDeps);
+    it("creates notification with correct title and body", async () => {
+      await notifyNewPR(mockPR, mockDeps);
 
-      expect(mockDeps.lastOptions).toEqual({
+      expect(mockDeps.lastOptions).toMatchObject({
         title: "New PR Review Request",
         body: "owner/repo: #123 Test PR\nby @testuser",
         silent: false,
+        urgency: "normal",
       });
     });
 
-    it("shows the notification", () => {
-      notifyNewPR(mockPR, mockDeps);
+    it("shows the notification", async () => {
+      await notifyNewPR(mockPR, mockDeps);
 
       expect(mockDeps.mockNotification.show).toHaveBeenCalled();
     });
 
-    it("opens PR URL in browser on click", () => {
-      notifyNewPR(mockPR, mockDeps);
+    it("opens PR URL in browser on click", async () => {
+      await notifyNewPR(mockPR, mockDeps);
 
       expect(mockDeps.clickHandler).not.toBeNull();
       mockDeps.clickHandler!();
@@ -115,7 +141,7 @@ describe("notifier", () => {
       );
     });
 
-    it("handles error when opening URL fails", () => {
+    it("handles error when opening URL fails", async () => {
       const consoleErrorSpy = vi
         .spyOn(console, "error")
         .mockImplementation(() => {});
@@ -123,7 +149,7 @@ describe("notifier", () => {
         throw new Error("Failed to open external URL");
       });
 
-      notifyNewPR(mockPR, mockDeps);
+      await notifyNewPR(mockPR, mockDeps);
       mockDeps.clickHandler!();
 
       expect(consoleErrorSpy).toHaveBeenCalledWith(
@@ -179,34 +205,36 @@ describe("notifier", () => {
       },
     ];
 
-    it("does not show notification when no PRs", () => {
-      notifyReminder([], mockDeps);
+    it("does not show notification when no PRs", async () => {
+      await notifyReminder([], mockDeps);
 
       expect(mockDeps.createNotification).not.toHaveBeenCalled();
     });
 
-    it("creates notification with single PR details", () => {
-      notifyReminder([mockSinglePR], mockDeps);
+    it("creates notification with single PR details", async () => {
+      await notifyReminder([mockSinglePR], mockDeps);
 
-      expect(mockDeps.lastOptions).toEqual({
+      expect(mockDeps.lastOptions).toMatchObject({
         title: "PR Review Reminder",
         body: "owner/repo: #123 Test PR",
         silent: false,
+        urgency: "normal",
       });
     });
 
-    it("creates notification with multiple PR count", () => {
-      notifyReminder(mockMultiplePRs, mockDeps);
+    it("creates notification with multiple PR count", async () => {
+      await notifyReminder(mockMultiplePRs, mockDeps);
 
-      expect(mockDeps.lastOptions).toEqual({
+      expect(mockDeps.lastOptions).toMatchObject({
         title: "PR Review Reminder",
         body: "You have 2 PRs waiting for your review",
         silent: false,
+        urgency: "normal",
       });
     });
 
-    it("opens PR URL in browser on click for single PR", () => {
-      notifyReminder([mockSinglePR], mockDeps);
+    it("opens PR URL in browser on click for single PR", async () => {
+      await notifyReminder([mockSinglePR], mockDeps);
 
       mockDeps.clickHandler!();
 
@@ -216,13 +244,13 @@ describe("notifier", () => {
       expect(mockDeps.createMainWindow).not.toHaveBeenCalled();
     });
 
-    it("opens menu window on click for multiple PRs", () => {
+    it("opens menu window on click for multiple PRs", async () => {
       const mockTrayBounds = { x: 100, y: 0, width: 22, height: 22 };
       mockDeps.getTray = vi.fn().mockReturnValue({
         getBounds: () => mockTrayBounds,
       });
 
-      notifyReminder(mockMultiplePRs, mockDeps);
+      await notifyReminder(mockMultiplePRs, mockDeps);
 
       mockDeps.clickHandler!();
 
@@ -231,10 +259,10 @@ describe("notifier", () => {
       expect(mockDeps.createMainWindow).toHaveBeenCalled();
     });
 
-    it("opens menu window on click for multiple PRs even without tray", () => {
+    it("opens menu window on click for multiple PRs even without tray", async () => {
       mockDeps.getTray = vi.fn().mockReturnValue(null);
 
-      notifyReminder(mockMultiplePRs, mockDeps);
+      await notifyReminder(mockMultiplePRs, mockDeps);
 
       mockDeps.clickHandler!();
 
@@ -243,7 +271,7 @@ describe("notifier", () => {
       expect(mockDeps.createMainWindow).toHaveBeenCalled();
     });
 
-    it("handles error when opening single PR URL fails", () => {
+    it("handles error when opening single PR URL fails", async () => {
       const consoleErrorSpy = vi
         .spyOn(console, "error")
         .mockImplementation(() => {});
@@ -251,7 +279,7 @@ describe("notifier", () => {
         throw new Error("Failed to open external URL");
       });
 
-      notifyReminder([mockSinglePR], mockDeps);
+      await notifyReminder([mockSinglePR], mockDeps);
       mockDeps.clickHandler!();
 
       expect(consoleErrorSpy).toHaveBeenCalledWith(

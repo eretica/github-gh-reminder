@@ -55,7 +55,9 @@ export function SettingsForm({
       formData.notifyOnNew !== settings.notifyOnNew ||
       formData.enableReminder !== settings.enableReminder ||
       formData.reminderIntervalHours !== settings.reminderIntervalHours ||
-      formData.checkIntervalMinutes !== settings.checkIntervalMinutes;
+      formData.checkIntervalMinutes !== settings.checkIntervalMinutes ||
+      formData.notificationSound !== settings.notificationSound ||
+      formData.notificationUrgency !== settings.notificationUrgency;
 
     setHasChanges(changed);
   }, [formData, settings]);
@@ -151,10 +153,76 @@ export function SettingsForm({
         )}
       </div>
 
+      {/* Notification Sound and Urgency */}
+      <div className="space-y-4 pt-4 border-t border-gray-200">
+        <h3 className="text-sm font-medium text-gray-700">
+          Notification Behavior
+        </h3>
+
+        {/* Notification Sound */}
+        <label className="flex items-start gap-3">
+          <input
+            type="checkbox"
+            checked={formData.notificationSound}
+            onChange={(e) =>
+              setFormData({ ...formData, notificationSound: e.target.checked })
+            }
+            className="mt-1 h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+          />
+          <div>
+            <span className="text-sm text-gray-900">
+              Play notification sound
+            </span>
+            <p className="text-xs text-gray-500 mt-0.5">
+              Play a sound when notifications appear
+            </p>
+          </div>
+        </label>
+
+        {/* Notification Urgency */}
+        <div className="space-y-1">
+          <label className="block text-sm text-gray-700">
+            Notification priority
+          </label>
+          <select
+            value={formData.notificationUrgency}
+            onChange={(e) =>
+              setFormData({
+                ...formData,
+                notificationUrgency: e.target.value as
+                  | "normal"
+                  | "critical"
+                  | "low",
+              })
+            }
+            className="block w-full max-w-xs rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm"
+          >
+            <option value="low">Low (minimal interruption)</option>
+            <option value="normal">Normal (default)</option>
+            <option value="critical">
+              Critical (stays until dismissed)
+            </option>
+          </select>
+          <p className="text-xs text-gray-500">
+            {formData.notificationUrgency === "critical" &&
+              "Critical notifications stay visible until you dismiss them"}
+            {formData.notificationUrgency === "normal" &&
+              "Normal notifications appear and auto-dismiss"}
+            {formData.notificationUrgency === "low" &&
+              "Low priority notifications appear quietly"}
+          </p>
+        </div>
+      </div>
+
       {/* Check Interval */}
-      <div className="space-y-2">
+      <div className="space-y-2 pt-4 border-t border-gray-200">
         <h3 className="text-sm font-medium text-gray-700">Check Interval</h3>
-        <p className="text-xs text-gray-500">How often to check for new PRs</p>
+        <p className="text-xs text-gray-500">
+          How often to check for new PRs.{" "}
+          <span className="font-medium text-blue-600">
+            Shorter intervals help you notice requests faster!
+          </span>
+        </p>
         <select
           value={formData.checkIntervalMinutes}
           onChange={(e) =>
@@ -168,6 +236,7 @@ export function SettingsForm({
           {CHECK_INTERVAL_OPTIONS.map((opt) => (
             <option key={opt.value} value={opt.value}>
               {opt.label}
+              {opt.value <= 3 ? " ⚡ Recommended" : ""}
             </option>
           ))}
         </select>

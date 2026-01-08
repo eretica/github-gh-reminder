@@ -1,7 +1,9 @@
 import { Notification, shell } from "electron";
-import type { PullRequest } from "../shared/types";
+import type { PullRequest, Settings } from "../shared/types";
 import { getTray } from "./tray";
 import { createMainWindow, setTrayBounds } from "./windows";
+import { getDatabase } from "./db";
+import * as schema from "./db/schema";
 
 // Notification-like interface for DI
 interface NotificationLike {
@@ -9,13 +11,17 @@ interface NotificationLike {
   show(): void;
 }
 
+// Notification options with urgency
+interface NotificationOptions {
+  title: string;
+  body: string;
+  silent: boolean;
+  urgency?: "normal" | "critical" | "low";
+}
+
 // Dependencies interface for DI
 export interface NotifierDeps {
-  createNotification: (options: {
-    title: string;
-    body: string;
-    silent: boolean;
-  }) => NotificationLike;
+  createNotification: (options: NotificationOptions) => NotificationLike;
   openExternal: (url: string) => void;
   getTray: () => { getBounds: () => Electron.Rectangle } | null;
   setTrayBounds: (bounds: Electron.Rectangle) => void;
@@ -31,14 +37,41 @@ const defaultDeps: NotifierDeps = {
   createMainWindow,
 };
 
-export function notifyNewPR(
+// Helper to get current settings from database
+async function getCurrentSettings(): Promise<Settings> {
+  const db = getDatabase();
+  const rows = await db.select().from(schema.settings);
+
+  const result: Settings = {
+    notifyOnNew: true,
+    enableReminder: true,
+    reminderIntervalHours: 1,
+    checkIntervalMinutes: 5,
+    notificationSound: true,
+    notificationUrgency: "normal",
+  };
+
+  for (const row of rows) {
+    const key = row.key as keyof Settings;
+    if (key in result) {
+      (result as Record<string, unknown>)[key] = JSON.parse(row.value);
+    }
+  }
+
+  return result;
+}
+
+export async function notifyNewPR(
   pr: PullRequest,
   deps: NotifierDeps = defaultDeps,
-): void {
+): Promise<void> {
+  const settings = await getCurrentSettings();
+
   const notification = deps.createNotification({
     title: "New PR Review Request",
     body: `${pr.repositoryName}: #${pr.prNumber} ${pr.title}\nby @${pr.author}`,
-    silent: false,
+    silent: !settings.notificationSound,
+    urgency: settings.notificationUrgency,
   });
 
   notification.on("click", () => {
@@ -52,12 +85,13 @@ export function notifyNewPR(
   notification.show();
 }
 
-export function notifyReminder(
+export async function notifyReminder(
   prs: PullRequest[],
   deps: NotifierDeps = defaultDeps,
-): void {
+): Promise<void> {
   if (prs.length === 0) return;
 
+  const settings = await getCurrentSettings();
   const count = prs.length;
   const body =
     count === 1
@@ -67,7 +101,8 @@ export function notifyReminder(
   const notification = deps.createNotification({
     title: "PR Review Reminder",
     body,
-    silent: false,
+    silent: !settings.notificationSound,
+    urgency: settings.notificationUrgency,
   });
 
   notification.on("click", () => {
