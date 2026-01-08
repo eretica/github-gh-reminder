@@ -41,6 +41,12 @@ const api: IpcApi = {
     ipcRenderer.invoke(IPC_CHANNELS.CLOSE_SETTINGS),
   quitApp: (): Promise<void> => ipcRenderer.invoke(IPC_CHANNELS.QUIT_APP),
 
+  // Updates
+  checkForUpdates: (): Promise<void> =>
+    ipcRenderer.invoke(IPC_CHANNELS.UPDATE_CHECK),
+  quitAndInstall: (): Promise<void> =>
+    ipcRenderer.invoke(IPC_CHANNELS.UPDATE_INSTALL),
+
   // Events
   onPullRequestsUpdated: (
     callback: (prs: PullRequest[]) => void,

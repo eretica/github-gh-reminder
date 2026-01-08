@@ -1,7 +1,15 @@
 import { join } from "node:path";
-import { nativeImage, Tray } from "electron";
+import { app, Menu, nativeImage, Tray } from "electron";
+import pkg from "electron-updater";
+
+const { autoUpdater } = pkg;
+
 import type { PullRequest } from "../shared/types";
-import { createMainWindow, setTrayBounds } from "./windows";
+import {
+  createMainWindow,
+  createSettingsWindow,
+  setTrayBounds,
+} from "./windows";
 
 // Dependencies interface for DI
 export interface TrayDeps {
@@ -73,6 +81,31 @@ export function updateTrayMenu(prs: PullRequest[]): void {
 
   // Update title with PR count (shown next to tray icon)
   tray.setTitle(hasPRs ? `${prCount}` : "");
+
+  // Update context menu
+  const contextMenu = Menu.buildFromTemplate([
+    {
+      label: "設定を開く",
+      click: () => {
+        createSettingsWindow();
+      },
+    },
+    {
+      label: "アップデートを確認",
+      click: () => {
+        autoUpdater.checkForUpdates();
+      },
+    },
+    { type: "separator" },
+    {
+      label: "終了",
+      click: () => {
+        app.quit();
+      },
+    },
+  ]);
+
+  tray.setContextMenu(contextMenu);
 }
 
 export function getCurrentPRs(): PullRequest[] {

@@ -1,6 +1,10 @@
 import { basename } from "node:path";
 import { eq } from "drizzle-orm";
 import { app, BrowserWindow, dialog, ipcMain, shell } from "electron";
+import pkg from "electron-updater";
+
+const { autoUpdater } = pkg;
+
 import { v4 as uuidv4 } from "uuid";
 import {
   DEFAULT_SETTINGS,
@@ -207,6 +211,15 @@ export function setupIpcHandlers(): void {
 
   ipcMain.handle(IPC_CHANNELS.QUIT_APP, async (): Promise<void> => {
     app.quit();
+  });
+
+  // Update handlers
+  ipcMain.handle(IPC_CHANNELS.UPDATE_CHECK, async (): Promise<void> => {
+    autoUpdater.checkForUpdates();
+  });
+
+  ipcMain.handle(IPC_CHANNELS.UPDATE_INSTALL, async (): Promise<void> => {
+    autoUpdater.quitAndInstall();
   });
 }
 
