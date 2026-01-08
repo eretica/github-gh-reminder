@@ -143,6 +143,7 @@ describe("gh-cli", () => {
           url: "https://github.com/owner/repo/pull/123",
           author: { login: "testuser" },
           createdAt: "2024-01-01T00:00:00Z",
+          reviewRequests: [{ __typename: "User", login: "currentuser" }],
         },
       ];
       mockExecSync.mockReturnValueOnce(JSON.stringify(mockPRs));
@@ -151,7 +152,7 @@ describe("gh-cli", () => {
 
       expect(result).toEqual(mockPRs);
       expect(mockExecSync).toHaveBeenCalledWith(
-        'gh pr list --search "review-requested:@me" --limit 100 --json number,title,url,author,createdAt,isDraft,state,reviewDecision,reviewRequests,comments,changedFiles,mergeable,statusCheckRollup',
+        'gh pr list --state open --limit 100 --json number,title,url,author,createdAt,isDraft,state,reviewDecision,reviewRequests,comments,changedFiles,mergeable,statusCheckRollup',
         {
           cwd: "/path/to/repo",
           encoding: "utf-8",
@@ -182,6 +183,7 @@ describe("gh-cli", () => {
           url: "https://github.com/owner/repo/pull/1",
           author: { login: "user1" },
           createdAt: "2024-01-01T00:00:00Z",
+          reviewRequests: [{ __typename: "User", login: "currentuser" }],
         },
         {
           number: 2,
@@ -189,11 +191,66 @@ describe("gh-cli", () => {
           url: "https://github.com/owner/repo/pull/2",
           author: { login: "user2" },
           createdAt: "2024-01-02T00:00:00Z",
+          reviewRequests: [{ __typename: "User", login: "currentuser" }],
         },
       ];
       mockExecSync.mockReturnValueOnce(JSON.stringify(mockPRs));
 
       expect(fetchReviewRequestedPRs("/path/to/repo")).toEqual(mockPRs);
+    });
+
+    it("filters out PRs without review requests", () => {
+      const mockPRs = [
+        {
+          number: 1,
+          title: "PR with review request",
+          url: "https://github.com/owner/repo/pull/1",
+          author: { login: "user1" },
+          createdAt: "2024-01-01T00:00:00Z",
+          reviewRequests: [{ __typename: "User", login: "currentuser" }],
+        },
+        {
+          number: 2,
+          title: "PR without review request",
+          url: "https://github.com/owner/repo/pull/2",
+          author: { login: "user2" },
+          createdAt: "2024-01-02T00:00:00Z",
+          reviewRequests: [],
+        },
+      ];
+      mockExecSync.mockReturnValueOnce(JSON.stringify(mockPRs));
+
+      const result = fetchReviewRequestedPRs("/path/to/repo");
+
+      expect(result).toHaveLength(1);
+      expect(result[0].number).toBe(1);
+    });
+
+    it("filters out PRs with only team review requests", () => {
+      const mockPRs = [
+        {
+          number: 1,
+          title: "PR with user review request",
+          url: "https://github.com/owner/repo/pull/1",
+          author: { login: "user1" },
+          createdAt: "2024-01-01T00:00:00Z",
+          reviewRequests: [{ __typename: "User", login: "currentuser" }],
+        },
+        {
+          number: 2,
+          title: "PR with team review request",
+          url: "https://github.com/owner/repo/pull/2",
+          author: { login: "user2" },
+          createdAt: "2024-01-02T00:00:00Z",
+          reviewRequests: [{ __typename: "Team", login: "team1" }],
+        },
+      ];
+      mockExecSync.mockReturnValueOnce(JSON.stringify(mockPRs));
+
+      const result = fetchReviewRequestedPRs("/path/to/repo");
+
+      expect(result).toHaveLength(1);
+      expect(result[0].number).toBe(1);
     });
   });
 });

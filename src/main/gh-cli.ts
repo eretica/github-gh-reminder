@@ -22,13 +22,27 @@ export interface GHPullRequest {
 
 export function fetchReviewRequestedPRs(repoPath: string): GHPullRequest[] {
   try {
-    const command = `gh pr list --search "review-requested:@me" --limit 100 --json number,title,url,author,createdAt,isDraft,state,reviewDecision,reviewRequests,comments,changedFiles,mergeable,statusCheckRollup`;
+    // Fetch all open PRs and filter client-side for review requests
+    // Note: --search flag doesn't reliably work with gh pr list for review-requested queries
+    const command = `gh pr list --state open --limit 100 --json number,title,url,author,createdAt,isDraft,state,reviewDecision,reviewRequests,comments,changedFiles,mergeable,statusCheckRollup`;
     const result = execSync(command, {
       cwd: repoPath,
       encoding: "utf-8",
       timeout: 30000,
     });
-    return JSON.parse(result);
+    const allPRs: GHPullRequest[] = JSON.parse(result);
+
+    // Filter PRs where current user is requested for review
+    // GitHub CLI provides reviewRequests array with user/team info
+    return allPRs.filter((pr) => {
+      // Check if there are any review requests for the current user
+      // reviewRequests contains objects with __typename (User/Team) and login
+      return pr.reviewRequests && pr.reviewRequests.some((req) => {
+        // We're looking for User type review requests (not Team)
+        // GitHub CLI returns these when the authenticated user is requested
+        return req.__typename === "User";
+      });
+    });
   } catch (error) {
     console.error(`Failed to fetch PRs for ${repoPath}:`, error);
     return [];
