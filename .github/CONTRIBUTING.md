@@ -1,6 +1,6 @@
-# Contributing to PR Reminder
+# Contributing to GitHub PR Reminder
 
-Thank you for contributing to PR Reminder! This document provides guidelines for contributing to the project.
+Thank you for contributing to GitHub PR Reminder! This document provides guidelines for contributing to the project.
 
 ## Development Setup
 

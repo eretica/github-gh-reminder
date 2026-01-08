@@ -12,7 +12,7 @@ export function initDatabase(): ReturnType<typeof drizzle<typeof schema>> {
   if (db) return db;
 
   const userDataPath = app.getPath("userData");
-  const dbPath = join(userDataPath, "pr-reminder.db");
+  const dbPath = join(userDataPath, "github-pr-reminder.db");
 
   sqlite = new Database(dbPath);
 

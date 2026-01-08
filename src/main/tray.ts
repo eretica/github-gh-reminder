@@ -56,7 +56,7 @@ export function createTray(injectedDeps: TrayDeps = defaultDeps): Tray {
   deps = injectedDeps;
   const icon = deps.createIcon(false);
   tray = deps.createTrayInstance(icon) as Tray;
-  tray.setToolTip("PR Reminder");
+  tray.setToolTip("GitHub PR Reminder");
 
   // Click to show window (no context menu)
   // Always show the menu window regardless of PR count

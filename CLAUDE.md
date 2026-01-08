@@ -67,7 +67,7 @@ export function createTray(): Tray {
   if (tray) return tray;
 
   tray = new Tray(createTrayIcon());
-  tray.setToolTip('PR Reminder');
+  tray.setToolTip('GitHub PR Reminder');
 
   // Handle tray click
   tray.on('click', (_event, bounds) => {

@@ -1,6 +1,6 @@
 # Application Icons
 
-This directory contains the application icons for the PR Reminder app.
+This directory contains the application icons for the GitHub PR Reminder app.
 
 ## Files
 

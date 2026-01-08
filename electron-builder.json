@@ -1,7 +1,7 @@
 {
   "$schema": "https://raw.githubusercontent.com/electron-userland/electron-builder/master/packages/app-builder-lib/scheme.json",
-  "appId": "com.pr-reminder.app",
-  "productName": "pr-reminder",
+  "appId": "com.eretica.github-pr-reminder",
+  "productName": "GitHub PR Reminder",
   "directories": {
     "output": "dist"
   },
@@ -9,7 +9,7 @@
   "publish": {
     "provider": "github",
     "owner": "eretica",
-    "repo": "github_remainder"
+    "repo": "github_gh_reminder"
   },
   "mac": {
     "target": ["dmg", "zip"],
