@@ -73,8 +73,15 @@ if (!gotTheLock) {
       sendPRUpdate(prs);
     });
 
-    // Check for updates on startup
-    autoUpdater.checkForUpdatesAndNotify();
+    // Check for updates on startup, only in packaged app
+    if (app.isPackaged) {
+      try {
+        // Run in the background
+        autoUpdater.checkForUpdatesAndNotify();
+      } catch (err) {
+        log.error("Error checking for updates on startup:", err);
+      }
+    }
 
     // On macOS, keep app running even when dock icon is clicked with no windows
     app.on("activate", () => {
