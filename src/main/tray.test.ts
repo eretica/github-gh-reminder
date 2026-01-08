@@ -112,7 +112,7 @@ describe("tray", () => {
     it("sets tooltip on tray", () => {
       createTray(mockDeps);
 
-      expect(mockDeps.mockTray.setToolTip).toHaveBeenCalledWith("PR Reminder");
+      expect(mockDeps.mockTray.setToolTip).toHaveBeenCalledWith("GitHub PR Reminder");
     });
 
     it("registers click handler", () => {
