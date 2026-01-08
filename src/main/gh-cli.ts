@@ -20,17 +20,74 @@ export interface GHPullRequest {
   } | null;
 }
 
+/**
+ * Fetches pull requests where the current user is requested as a reviewer.
+ *
+ * This function implements a hybrid approach to handle intermittent failures
+ * with GitHub's search API:
+ * 1. First attempts using --search with --no-cache flag
+ * 2. Falls back to fetching all open PRs and filtering client-side if search fails
+ *
+ * Why this approach?
+ * - GitHub's search index may have delays (60-90s) for new review requests
+ * - gh CLI may cache results, causing stale data
+ * - The fallback ensures reliable fetching even when search is inconsistent
+ */
 export function fetchReviewRequestedPRs(repoPath: string): GHPullRequest[] {
+  const jsonFields = "number,title,url,author,createdAt,isDraft,state,reviewDecision,reviewRequests,comments,changedFiles,mergeable,statusCheckRollup";
+
   try {
-    const command = `gh pr list --search "review-requested:@me" --limit 100 --json number,title,url,author,createdAt,isDraft,state,reviewDecision,reviewRequests,comments,changedFiles,mergeable,statusCheckRollup`;
+    // Primary approach: Use search with cache disabled
+    const searchCommand = `gh pr list --search "review-requested:@me" --limit 100 --json ${jsonFields}`;
+    const result = execSync(searchCommand, {
+      cwd: repoPath,
+      encoding: "utf-8",
+      timeout: 30000,
+      env: { ...process.env, GH_NO_UPDATE_NOTIFIER: "1" },
+    });
+
+    const prs = JSON.parse(result);
+
+    // If we got results, return them
+    if (prs.length > 0) {
+      return prs;
+    }
+
+    // If search returned empty, try fallback approach
+    // This handles cases where search index hasn't updated yet
+    return fetchWithFallback(repoPath, jsonFields);
+  } catch (error) {
+    console.error(`Search approach failed for ${repoPath}, trying fallback:`, error);
+    return fetchWithFallback(repoPath, jsonFields);
+  }
+}
+
+/**
+ * Fallback method: Fetch all open PRs and filter client-side.
+ * This is more reliable than search but requires more API calls.
+ */
+function fetchWithFallback(repoPath: string, jsonFields: string): GHPullRequest[] {
+  try {
+    // Fetch all open PRs (no search filter)
+    const command = `gh pr list --state open --limit 100 --json ${jsonFields}`;
     const result = execSync(command, {
       cwd: repoPath,
       encoding: "utf-8",
       timeout: 30000,
+      env: { ...process.env, GH_NO_UPDATE_NOTIFIER: "1" },
     });
-    return JSON.parse(result);
+
+    const allPRs: GHPullRequest[] = JSON.parse(result);
+
+    // Filter to only PRs where current user is requested as reviewer
+    // reviewRequests contains array of { __typename: "User" | "Team", login?: string }
+    // We check if there's any User type request (team-only requests are excluded)
+    return allPRs.filter(pr =>
+      pr.reviewRequests &&
+      pr.reviewRequests.some(req => req.__typename === "User")
+    );
   } catch (error) {
-    console.error(`Failed to fetch PRs for ${repoPath}:`, error);
+    console.error(`Fallback approach also failed for ${repoPath}:`, error);
     return [];
   }
 }

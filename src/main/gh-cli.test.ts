@@ -135,7 +135,7 @@ describe("gh-cli", () => {
   });
 
   describe("fetchReviewRequestedPRs", () => {
-    it("returns PRs when successful", () => {
+    it("returns PRs when search is successful", () => {
       const mockPRs = [
         {
           number: 123,
@@ -143,6 +143,7 @@ describe("gh-cli", () => {
           url: "https://github.com/owner/repo/pull/123",
           author: { login: "testuser" },
           createdAt: "2024-01-01T00:00:00Z",
+          reviewRequests: [{ __typename: "User", login: "currentuser" }],
         },
       ];
       mockExecSync.mockReturnValueOnce(JSON.stringify(mockPRs));
@@ -156,25 +157,115 @@ describe("gh-cli", () => {
           cwd: "/path/to/repo",
           encoding: "utf-8",
           timeout: 30000,
+          env: { ...process.env, GH_NO_UPDATE_NOTIFIER: "1" },
         },
       );
     });
 
-    it("returns empty array when no PRs found", () => {
-      mockExecSync.mockReturnValueOnce("[]");
+    it("falls back to client-side filtering when search returns empty", () => {
+      const fallbackPRs = [
+        {
+          number: 456,
+          title: "Fallback PR",
+          url: "https://github.com/owner/repo/pull/456",
+          author: { login: "anotheruser" },
+          createdAt: "2024-01-03T00:00:00Z",
+          reviewRequests: [{ __typename: "User", login: "currentuser" }],
+        },
+        {
+          number: 789,
+          title: "Team Review PR",
+          url: "https://github.com/owner/repo/pull/789",
+          author: { login: "thirduser" },
+          createdAt: "2024-01-04T00:00:00Z",
+          reviewRequests: [{ __typename: "Team", login: "team-name" }],
+        },
+      ];
 
-      expect(fetchReviewRequestedPRs("/path/to/repo")).toEqual([]);
+      // First call (search) returns empty array
+      mockExecSync.mockReturnValueOnce("[]");
+      // Second call (fallback) returns all open PRs
+      mockExecSync.mockReturnValueOnce(JSON.stringify(fallbackPRs));
+
+      const result = fetchReviewRequestedPRs("/path/to/repo");
+
+      // Should filter to only User review requests
+      expect(result).toEqual([fallbackPRs[0]]);
+      expect(mockExecSync).toHaveBeenCalledTimes(2);
     });
 
-    it("returns empty array on error", () => {
+    it("falls back when search command fails", () => {
+      const fallbackPRs = [
+        {
+          number: 101,
+          title: "Error Recovery PR",
+          url: "https://github.com/owner/repo/pull/101",
+          author: { login: "testuser" },
+          createdAt: "2024-01-05T00:00:00Z",
+          reviewRequests: [{ __typename: "User", login: "currentuser" }],
+        },
+      ];
+
+      // First call (search) throws error
       mockExecSync.mockImplementationOnce(() => {
+        throw new Error("Search API error");
+      });
+      // Second call (fallback) succeeds
+      mockExecSync.mockReturnValueOnce(JSON.stringify(fallbackPRs));
+
+      const result = fetchReviewRequestedPRs("/path/to/repo");
+
+      expect(result).toEqual(fallbackPRs);
+      expect(mockExecSync).toHaveBeenCalledTimes(2);
+    });
+
+    it("returns empty array when both search and fallback fail", () => {
+      mockExecSync.mockImplementation(() => {
         throw new Error("Network error");
       });
 
       expect(fetchReviewRequestedPRs("/path/to/repo")).toEqual([]);
     });
 
-    it("returns multiple PRs correctly", () => {
+    it("filters out team-only review requests in fallback", () => {
+      const allPRs = [
+        {
+          number: 1,
+          title: "User Review PR",
+          url: "https://github.com/owner/repo/pull/1",
+          author: { login: "user1" },
+          createdAt: "2024-01-01T00:00:00Z",
+          reviewRequests: [{ __typename: "User", login: "currentuser" }],
+        },
+        {
+          number: 2,
+          title: "Team Review PR",
+          url: "https://github.com/owner/repo/pull/2",
+          author: { login: "user2" },
+          createdAt: "2024-01-02T00:00:00Z",
+          reviewRequests: [{ __typename: "Team", login: "team-name" }],
+        },
+        {
+          number: 3,
+          title: "No Review PR",
+          url: "https://github.com/owner/repo/pull/3",
+          author: { login: "user3" },
+          createdAt: "2024-01-03T00:00:00Z",
+          reviewRequests: [],
+        },
+      ];
+
+      // Search returns empty, fallback returns all PRs
+      mockExecSync.mockReturnValueOnce("[]");
+      mockExecSync.mockReturnValueOnce(JSON.stringify(allPRs));
+
+      const result = fetchReviewRequestedPRs("/path/to/repo");
+
+      // Should only return the first PR (User review request)
+      expect(result).toEqual([allPRs[0]]);
+    });
+
+    it("returns multiple PRs correctly from search", () => {
       const mockPRs = [
         {
           number: 1,
@@ -182,6 +273,7 @@ describe("gh-cli", () => {
           url: "https://github.com/owner/repo/pull/1",
           author: { login: "user1" },
           createdAt: "2024-01-01T00:00:00Z",
+          reviewRequests: [{ __typename: "User" }],
         },
         {
           number: 2,
@@ -189,6 +281,7 @@ describe("gh-cli", () => {
           url: "https://github.com/owner/repo/pull/2",
           author: { login: "user2" },
           createdAt: "2024-01-02T00:00:00Z",
+          reviewRequests: [{ __typename: "User" }],
         },
       ];
       mockExecSync.mockReturnValueOnce(JSON.stringify(mockPRs));
