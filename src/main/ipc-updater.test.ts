@@ -81,12 +81,11 @@ vi.mock("./windows", () => ({
 }));
 
 import { ipcMain } from "electron";
-import pkg from "electron-updater";
 import { IPC_CHANNELS } from "../shared/types";
 import { setupIpcHandlers } from "./ipc";
 
 describe("IPC Update Handlers", () => {
-  let handleCallbacks: Map<string, Function>;
+  let handleCallbacks: Map<string, (...args: never[]) => unknown>;
 
   beforeEach(() => {
     vi.clearAllMocks();
