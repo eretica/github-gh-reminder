@@ -187,8 +187,9 @@ describe("Database", () => {
       expect(mockInsert).toHaveBeenCalled();
 
       const expectedValues = [
-        { key: "remindInterval", value: JSON.stringify(DEFAULT_SETTINGS.remindInterval) },
-        { key: "checkInterval", value: JSON.stringify(DEFAULT_SETTINGS.checkInterval) },
+        { key: "enableReminder", value: JSON.stringify(DEFAULT_SETTINGS.enableReminder) },
+        { key: "reminderIntervalHours", value: JSON.stringify(DEFAULT_SETTINGS.reminderIntervalHours) },
+        { key: "checkIntervalMinutes", value: JSON.stringify(DEFAULT_SETTINGS.checkIntervalMinutes) },
       ];
 
       expect(mockValues).toHaveBeenCalledWith(expectedValues);
