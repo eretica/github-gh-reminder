@@ -1,8 +1,8 @@
 import { join } from "node:path";
 import Database from "better-sqlite3";
+import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/better-sqlite3";
 import { migrate } from "drizzle-orm/better-sqlite3/migrator";
-import { eq } from "drizzle-orm";
 import { app } from "electron";
 import { DEFAULT_SETTINGS } from "../../shared/types";
 import * as schema from "./schema";

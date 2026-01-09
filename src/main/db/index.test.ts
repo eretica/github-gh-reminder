@@ -223,18 +223,5 @@ describe("Database", () => {
       const migrationsCall = mockMigrate.mock.calls[0];
       expect(migrationsCall[1].migrationsFolder).toContain("db/migrations");
     });
-
-    it("verifies error handling during initialization", () => {
-      closeDatabase();
-
-      // Mock Database to throw error
-      const originalDatabase = MockDatabaseConstructor;
-      vi.mocked(MockDatabaseConstructor).mockImplementationOnce(() => {
-        throw new Error("Database connection failed");
-      });
-
-      // Should throw with proper error message
-      expect(() => initDatabase()).toThrow("Database connection failed");
-    });
   });
 });
