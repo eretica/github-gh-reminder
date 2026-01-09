@@ -1,6 +1,7 @@
 import { join } from "node:path";
 import Database from "better-sqlite3";
 import { drizzle } from "drizzle-orm/better-sqlite3";
+import { migrate } from "drizzle-orm/better-sqlite3/migrator";
 import { app } from "electron";
 import { DEFAULT_SETTINGS } from "../../shared/types";
 import * as schema from "./schema";
@@ -19,48 +20,11 @@ export function initDatabase(): ReturnType<typeof drizzle<typeof schema>> {
   // Enable WAL mode for better performance
   sqlite.pragma("journal_mode = WAL");
 
-  // Create tables if they don't exist
-  sqlite.exec(`
-    CREATE TABLE IF NOT EXISTS repositories (
-      id TEXT PRIMARY KEY,
-      path TEXT NOT NULL,
-      name TEXT NOT NULL,
-      enabled INTEGER NOT NULL DEFAULT 1,
-      "order" INTEGER NOT NULL DEFAULT 0,
-      created_at TEXT NOT NULL,
-      updated_at TEXT NOT NULL
-    );
-
-    CREATE TABLE IF NOT EXISTS settings (
-      key TEXT PRIMARY KEY,
-      value TEXT NOT NULL
-    );
-
-    CREATE TABLE IF NOT EXISTS pull_requests (
-      id TEXT PRIMARY KEY,
-      repository_id TEXT NOT NULL REFERENCES repositories(id) ON DELETE CASCADE,
-      pr_number INTEGER NOT NULL,
-      title TEXT NOT NULL,
-      url TEXT NOT NULL,
-      author TEXT NOT NULL,
-      created_at TEXT NOT NULL,
-      first_seen_at TEXT NOT NULL,
-      notified_at TEXT,
-      last_reminded_at TEXT
-    );
-
-    CREATE TABLE IF NOT EXISTS notification_history (
-      id TEXT PRIMARY KEY,
-      pr_id TEXT NOT NULL REFERENCES pull_requests(id) ON DELETE CASCADE,
-      type TEXT NOT NULL,
-      notified_at TEXT NOT NULL
-    );
-
-    CREATE INDEX IF NOT EXISTS idx_pr_repository ON pull_requests(repository_id);
-    CREATE INDEX IF NOT EXISTS idx_notification_pr ON notification_history(pr_id);
-  `);
-
   db = drizzle(sqlite, { schema });
+
+  // Run migrations to create/update database schema
+  const migrationsFolder = join(__dirname, "migrations");
+  migrate(db, { migrationsFolder });
 
   // Initialize default settings if not exist
   initDefaultSettings();
