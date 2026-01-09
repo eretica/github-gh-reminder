@@ -1,4 +1,4 @@
-import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import { index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 
 export const repositories = sqliteTable("repositories", {
   id: text("id").primaryKey(),
@@ -15,29 +15,41 @@ export const settings = sqliteTable("settings", {
   value: text("value").notNull(),
 });
 
-export const pullRequests = sqliteTable("pull_requests", {
-  id: text("id").primaryKey(),
-  repositoryId: text("repository_id")
-    .notNull()
-    .references(() => repositories.id, { onDelete: "cascade" }),
-  prNumber: integer("pr_number").notNull(),
-  title: text("title").notNull(),
-  url: text("url").notNull(),
-  author: text("author").notNull(),
-  createdAt: text("created_at").notNull(),
-  firstSeenAt: text("first_seen_at").notNull(),
-  notifiedAt: text("notified_at"),
-  lastRemindedAt: text("last_reminded_at"),
-});
+export const pullRequests = sqliteTable(
+  "pull_requests",
+  {
+    id: text("id").primaryKey(),
+    repositoryId: text("repository_id")
+      .notNull()
+      .references(() => repositories.id, { onDelete: "cascade" }),
+    prNumber: integer("pr_number").notNull(),
+    title: text("title").notNull(),
+    url: text("url").notNull(),
+    author: text("author").notNull(),
+    createdAt: text("created_at").notNull(),
+    firstSeenAt: text("first_seen_at").notNull(),
+    notifiedAt: text("notified_at"),
+    lastRemindedAt: text("last_reminded_at"),
+  },
+  (table) => ({
+    repositoryIdx: index("idx_pr_repository").on(table.repositoryId),
+  }),
+);
 
-export const notificationHistory = sqliteTable("notification_history", {
-  id: text("id").primaryKey(),
-  prId: text("pr_id")
-    .notNull()
-    .references(() => pullRequests.id, { onDelete: "cascade" }),
-  type: text("type").notNull(), // 'new' | 'remind'
-  notifiedAt: text("notified_at").notNull(),
-});
+export const notificationHistory = sqliteTable(
+  "notification_history",
+  {
+    id: text("id").primaryKey(),
+    prId: text("pr_id")
+      .notNull()
+      .references(() => pullRequests.id, { onDelete: "cascade" }),
+    type: text("type").notNull(), // 'new' | 'remind'
+    notifiedAt: text("notified_at").notNull(),
+  },
+  (table) => ({
+    prIdx: index("idx_notification_pr").on(table.prId),
+  }),
+);
 
 export type RepositoryRecord = typeof repositories.$inferSelect;
 export type NewRepository = typeof repositories.$inferInsert;

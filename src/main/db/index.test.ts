@@ -24,12 +24,12 @@ vi.mock("better-sqlite3", () => ({
 
 // Mock drizzle
 const mockDrizzleInstance = { query: vi.fn() };
-const mockMigrate = vi.fn();
 vi.mock("drizzle-orm/better-sqlite3", () => ({
   drizzle: vi.fn(() => mockDrizzleInstance),
 }));
+
 vi.mock("drizzle-orm/better-sqlite3/migrator", () => ({
-  migrate: mockMigrate,
+  migrate: vi.fn(),
 }));
 
 // Mock electron
@@ -42,11 +42,13 @@ vi.mock("electron", () => ({
 // Import after mocks
 import Database from "better-sqlite3";
 import { drizzle } from "drizzle-orm/better-sqlite3";
+import { migrate } from "drizzle-orm/better-sqlite3/migrator";
 import { DEFAULT_SETTINGS } from "../../shared/types";
 import { closeDatabase, getDatabase, initDatabase } from "./index";
 
 const _MockDatabase = Database as unknown as Mock;
 const mockDrizzle = drizzle as unknown as Mock;
+const mockMigrate = migrate as unknown as Mock;
 
 describe("Database", () => {
   beforeEach(() => {
@@ -196,5 +198,4 @@ describe("Database", () => {
       expect(() => getDatabase()).toThrow("Database not initialized");
     });
   });
-
 });

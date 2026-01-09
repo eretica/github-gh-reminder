@@ -162,9 +162,7 @@
       "indexes": {
         "idx_pr_repository": {
           "name": "idx_pr_repository",
-          "columns": [
-            "repository_id"
-          ],
+          "columns": ["repository_id"],
           "isUnique": false
         }
       },
@@ -172,13 +170,9 @@
         "pull_requests_repository_id_repositories_id_fk": {
           "name": "pull_requests_repository_id_repositories_id_fk",
           "tableFrom": "pull_requests",
-          "columnsFrom": [
-            "repository_id"
-          ],
+          "columnsFrom": ["repository_id"],
           "tableTo": "repositories",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         }
@@ -221,9 +215,7 @@
       "indexes": {
         "idx_notification_pr": {
           "name": "idx_notification_pr",
-          "columns": [
-            "pr_id"
-          ],
+          "columns": ["pr_id"],
           "isUnique": false
         }
       },
@@ -231,13 +223,9 @@
         "notification_history_pr_id_pull_requests_id_fk": {
           "name": "notification_history_pr_id_pull_requests_id_fk",
           "tableFrom": "notification_history",
-          "columnsFrom": [
-            "pr_id"
-          ],
+          "columnsFrom": ["pr_id"],
           "tableTo": "pull_requests",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         }
