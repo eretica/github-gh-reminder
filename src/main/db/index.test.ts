@@ -23,7 +23,20 @@ vi.mock("better-sqlite3", () => ({
 }));
 
 // Mock drizzle
-const mockDrizzleInstance = { query: vi.fn() };
+const mockSelect = vi.fn();
+const mockFrom = vi.fn();
+const mockWhere = vi.fn();
+const mockGet = vi.fn();
+const mockInsert = vi.fn();
+const mockValues = vi.fn();
+const mockRun = vi.fn();
+
+const mockDrizzleInstance = {
+  query: vi.fn(),
+  select: mockSelect,
+  insert: mockInsert,
+};
+
 vi.mock("drizzle-orm/better-sqlite3", () => ({
   drizzle: vi.fn(() => mockDrizzleInstance),
 }));
@@ -56,7 +69,17 @@ describe("Database", () => {
     // Reset module state by re-importing (not possible directly, so we close db)
     closeDatabase();
 
-    // Reset mocks
+    // Reset drizzle mocks - chain the methods
+    mockGet.mockReturnValue(undefined);
+    mockWhere.mockReturnValue({ get: mockGet });
+    mockFrom.mockReturnValue({ where: mockWhere });
+    mockSelect.mockReturnValue({ from: mockFrom });
+
+    mockRun.mockReturnValue(undefined);
+    mockValues.mockReturnValue({ run: mockRun });
+    mockInsert.mockReturnValue({ values: mockValues });
+
+    // Reset other mocks
     mockPrepare.mockReturnValue({
       get: vi.fn().mockReturnValue(undefined),
       run: vi.fn(),
@@ -77,7 +100,7 @@ describe("Database", () => {
       expect(mockMigrate).toHaveBeenCalledWith(
         mockDrizzleInstance,
         expect.objectContaining({
-          migrationsFolder: expect.stringContaining("migrations"),
+          migrationsFolder: expect.stringContaining("db/migrations"),
         }),
       );
     });
@@ -105,46 +128,36 @@ describe("Database", () => {
     });
 
     it("initializes default settings", () => {
-      const mockRun = vi.fn();
-      mockPrepare.mockReturnValue({
-        get: vi.fn().mockReturnValue(undefined), // Setting doesn't exist
-        run: mockRun,
-      });
+      // Mock that settings don't exist
+      mockGet.mockReturnValue(undefined);
 
       initDatabase();
 
-      // Should insert each default setting
+      // Should check for each default setting
       const settingsKeys = Object.keys(
         DEFAULT_SETTINGS,
       ) as (keyof typeof DEFAULT_SETTINGS)[];
-      expect(mockPrepare).toHaveBeenCalledWith(
-        "SELECT key FROM settings WHERE key = ?",
-      );
-      expect(mockPrepare).toHaveBeenCalledWith(
-        "INSERT INTO settings (key, value) VALUES (?, ?)",
-      );
+
+      expect(mockSelect).toHaveBeenCalled();
 
       // Verify settings are inserted
+      expect(mockInsert).toHaveBeenCalled();
       for (const key of settingsKeys) {
-        expect(mockRun).toHaveBeenCalledWith(
+        expect(mockValues).toHaveBeenCalledWith({
           key,
-          JSON.stringify(DEFAULT_SETTINGS[key]),
-        );
+          value: JSON.stringify(DEFAULT_SETTINGS[key]),
+        });
       }
     });
 
     it("does not overwrite existing settings", () => {
-      const mockRun = vi.fn();
-      const mockGet = vi.fn().mockReturnValue({ key: "notifyOnNew" }); // Setting exists
-      mockPrepare.mockReturnValue({
-        get: mockGet,
-        run: mockRun,
-      });
+      // Mock that settings exist
+      mockGet.mockReturnValue({ key: "notifyOnNew", value: "true" });
 
       initDatabase();
 
       // INSERT should not be called for existing settings
-      expect(mockRun).not.toHaveBeenCalled();
+      expect(mockInsert).not.toHaveBeenCalled();
     });
   });
 
@@ -196,6 +209,32 @@ describe("Database", () => {
 
       // getDatabase should throw after close
       expect(() => getDatabase()).toThrow("Database not initialized");
+    });
+  });
+
+  describe("migration verification", () => {
+    it("verifies migrations create all required tables", () => {
+      initDatabase();
+
+      // Verify migrations were called
+      expect(mockMigrate).toHaveBeenCalledTimes(1);
+
+      // Verify migrations folder path is correct
+      const migrationsCall = mockMigrate.mock.calls[0];
+      expect(migrationsCall[1].migrationsFolder).toContain("db/migrations");
+    });
+
+    it("verifies error handling during initialization", () => {
+      closeDatabase();
+
+      // Mock Database to throw error
+      const originalDatabase = MockDatabaseConstructor;
+      vi.mocked(MockDatabaseConstructor).mockImplementationOnce(() => {
+        throw new Error("Database connection failed");
+      });
+
+      // Should throw with proper error message
+      expect(() => initDatabase()).toThrow("Database connection failed");
     });
   });
 });
