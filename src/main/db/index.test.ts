@@ -27,6 +27,7 @@ const mockSelect = vi.fn();
 const mockFrom = vi.fn();
 const mockWhere = vi.fn();
 const mockGet = vi.fn();
+const mockAll = vi.fn();
 const mockInsert = vi.fn();
 const mockValues = vi.fn();
 const mockRun = vi.fn();
@@ -69,11 +70,14 @@ describe("Database", () => {
     // Reset module state by re-importing (not possible directly, so we close db)
     closeDatabase();
 
-    // Reset drizzle mocks - chain the methods
+    // Reset drizzle mocks - chain the methods for old queries
     mockGet.mockReturnValue(undefined);
     mockWhere.mockReturnValue({ get: mockGet });
-    mockFrom.mockReturnValue({ where: mockWhere });
+    mockFrom.mockReturnValue({ where: mockWhere, all: mockAll });
     mockSelect.mockReturnValue({ from: mockFrom });
+
+    // Mock for batch insert
+    mockAll.mockReturnValue([]);
 
     mockRun.mockReturnValue(undefined);
     mockValues.mockReturnValue({ run: mockRun });
@@ -127,37 +131,67 @@ describe("Database", () => {
       expect(db1).toBe(db2);
     });
 
-    it("initializes default settings", () => {
-      // Mock that settings don't exist
-      mockGet.mockReturnValue(undefined);
+    it("initializes default settings with batch insert", () => {
+      // Mock that no settings exist
+      mockAll.mockReturnValue([]);
 
       initDatabase();
 
-      // Should check for each default setting
+      // Should fetch all settings once
+      expect(mockSelect).toHaveBeenCalled();
+      expect(mockAll).toHaveBeenCalled();
+
+      // Should insert all default settings in one batch
+      expect(mockInsert).toHaveBeenCalled();
+
+      // Verify all settings are in the batch
       const settingsKeys = Object.keys(
         DEFAULT_SETTINGS,
       ) as (keyof typeof DEFAULT_SETTINGS)[];
 
-      expect(mockSelect).toHaveBeenCalled();
+      const expectedValues = settingsKeys.map((key) => ({
+        key,
+        value: JSON.stringify(DEFAULT_SETTINGS[key]),
+      }));
 
-      // Verify settings are inserted
-      expect(mockInsert).toHaveBeenCalled();
-      for (const key of settingsKeys) {
-        expect(mockValues).toHaveBeenCalledWith({
-          key,
-          value: JSON.stringify(DEFAULT_SETTINGS[key]),
-        });
-      }
+      expect(mockValues).toHaveBeenCalledWith(expectedValues);
     });
 
     it("does not overwrite existing settings", () => {
-      // Mock that settings exist
-      mockGet.mockReturnValue({ key: "notifyOnNew", value: "true" });
+      // Mock that all settings already exist
+      const existingSettings = Object.keys(DEFAULT_SETTINGS).map((key) => ({
+        key,
+        value: JSON.stringify(DEFAULT_SETTINGS[key as keyof typeof DEFAULT_SETTINGS]),
+      }));
+      mockAll.mockReturnValue(existingSettings);
 
       initDatabase();
 
-      // INSERT should not be called for existing settings
+      // SELECT should be called to check existing settings
+      expect(mockSelect).toHaveBeenCalled();
+      expect(mockAll).toHaveBeenCalled();
+
+      // INSERT should not be called since all settings exist
       expect(mockInsert).not.toHaveBeenCalled();
+    });
+
+    it("only inserts missing settings", () => {
+      // Mock that only some settings exist
+      mockAll.mockReturnValue([
+        { key: "notifyOnNew", value: "true" },
+      ]);
+
+      initDatabase();
+
+      // Should insert only missing settings
+      expect(mockInsert).toHaveBeenCalled();
+
+      const expectedValues = [
+        { key: "remindInterval", value: JSON.stringify(DEFAULT_SETTINGS.remindInterval) },
+        { key: "checkInterval", value: JSON.stringify(DEFAULT_SETTINGS.checkInterval) },
+      ];
+
+      expect(mockValues).toHaveBeenCalledWith(expectedValues);
     });
   });
 
@@ -222,6 +256,20 @@ describe("Database", () => {
       // Verify migrations folder path is correct
       const migrationsCall = mockMigrate.mock.calls[0];
       expect(migrationsCall[1].migrationsFolder).toContain("db/migrations");
+    });
+
+    it("verifies migration path is correctly constructed", () => {
+      initDatabase();
+
+      const migrationsCall = mockMigrate.mock.calls[0];
+      const migrationsPath = migrationsCall[1].migrationsFolder;
+
+      // Should contain the correct path segments
+      expect(migrationsPath).toContain("db");
+      expect(migrationsPath).toContain("migrations");
+
+      // Should be an absolute path or relative from __dirname
+      expect(migrationsPath).toBeTruthy();
     });
   });
 });

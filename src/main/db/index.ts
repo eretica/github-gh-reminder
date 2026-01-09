@@ -33,33 +33,44 @@ export function initDatabase(): ReturnType<typeof drizzle<typeof schema>> {
 
     return db;
   } catch (error) {
-    console.error("Database initialization failed:", error);
-    throw error;
+    // Log detailed error only in development
+    if (process.env.NODE_ENV !== "production") {
+      console.error("Database initialization failed:", error);
+    }
+
+    // Clean up database connection on error
+    if (sqlite) {
+      sqlite.close();
+      sqlite = null;
+    }
+
+    // Throw sanitized error for production
+    const sanitizedError =
+      error instanceof Error
+        ? new Error("Database initialization failed")
+        : new Error("Unknown database error");
+
+    throw sanitizedError;
   }
 }
 
 function initDefaultSettings(): void {
   if (!db) return;
 
-  const settingsKeys = Object.keys(
-    DEFAULT_SETTINGS,
-  ) as (keyof typeof DEFAULT_SETTINGS)[];
+  // Get all existing settings at once to avoid N+1 queries
+  const existingSettings = db.select().from(schema.settings).all();
+  const existingKeys = new Set(existingSettings.map((s) => s.key));
 
-  for (const key of settingsKeys) {
-    const existing = db
-      .select()
-      .from(schema.settings)
-      .where(eq(schema.settings.key, key))
-      .get();
+  // Batch insert missing settings
+  const settingsToInsert = Object.entries(DEFAULT_SETTINGS)
+    .filter(([key]) => !existingKeys.has(key))
+    .map(([key, value]) => ({
+      key,
+      value: JSON.stringify(value),
+    }));
 
-    if (!existing) {
-      db.insert(schema.settings)
-        .values({
-          key,
-          value: JSON.stringify(DEFAULT_SETTINGS[key]),
-        })
-        .run();
-    }
+  if (settingsToInsert.length > 0) {
+    db.insert(schema.settings).values(settingsToInsert).run();
   }
 }
 

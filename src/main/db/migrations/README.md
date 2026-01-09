@@ -107,9 +107,46 @@ This usually means Drizzle doesn't detect any changes. Ensure:
 
 ### Need to rollback a migration
 
-Drizzle doesn't have built-in rollback. To undo a migration:
-1. Create a new migration that reverses the changes
-2. Or manually edit the database (not recommended for production)
+Drizzle doesn't have built-in rollback. To undo a migration, you need to create a new migration that reverses the changes.
+
+**Emergency Rollback Procedure**
+
+If a migration causes critical issues in production:
+
+1. **Immediate fix**: Revert to the previous app version
+   ```bash
+   # If using version control for releases
+   git checkout <previous-version-tag>
+   pnpm build
+   ```
+
+2. **Database fix**: Create a new migration that reverses the problematic changes
+   ```bash
+   # Edit schema.ts to undo the changes
+   # Then generate a new migration
+   pnpm db:generate
+   # Name it descriptively: XXXX_rollback_problematic_migration.sql
+   ```
+
+3. **Example**: Rolling back a column addition
+   ```sql
+   -- Original migration (0002_add_color_column.sql)
+   ALTER TABLE repositories ADD COLUMN color TEXT;
+
+   -- Rollback migration (0003_rollback_color_column.sql)
+   ALTER TABLE repositories DROP COLUMN color;
+   ```
+
+4. **Deploy the fix**:
+   - Test the rollback migration locally first
+   - Deploy the new app version with the rollback migration
+   - The migration will run automatically on app start
+
+**Important Notes**:
+- Never manually edit applied migrations - always create new ones
+- Test rollback procedures in development before applying to production
+- Consider data preservation when rolling back (e.g., backup before dropping columns)
+- Document the reason for rollback in the migration file comments
 
 ## References
 
