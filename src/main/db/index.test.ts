@@ -161,7 +161,9 @@ describe("Database", () => {
       // Mock that all settings already exist
       const existingSettings = Object.keys(DEFAULT_SETTINGS).map((key) => ({
         key,
-        value: JSON.stringify(DEFAULT_SETTINGS[key as keyof typeof DEFAULT_SETTINGS]),
+        value: JSON.stringify(
+          DEFAULT_SETTINGS[key as keyof typeof DEFAULT_SETTINGS],
+        ),
       }));
       mockAll.mockReturnValue(existingSettings);
 
@@ -177,9 +179,7 @@ describe("Database", () => {
 
     it("only inserts missing settings", () => {
       // Mock that only some settings exist
-      mockAll.mockReturnValue([
-        { key: "notifyOnNew", value: "true" },
-      ]);
+      mockAll.mockReturnValue([{ key: "notifyOnNew", value: "true" }]);
 
       initDatabase();
 
