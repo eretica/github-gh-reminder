@@ -1,3 +1,5 @@
+export type NotificationPriority = "low" | "normal" | "high";
+
 export interface Repository {
   id: string;
   path: string;
@@ -6,6 +8,12 @@ export interface Repository {
   order: number;
   createdAt: string;
   updatedAt: string;
+  // Notification settings
+  notifyOnNewPR: boolean;
+  enableReminders: boolean;
+  reminderIntervalHours: number;
+  notificationPriority: NotificationPriority;
+  doNotDisturb: boolean;
 }
 
 export interface PullRequest {
@@ -47,6 +55,14 @@ export const DEFAULT_SETTINGS: Settings = {
   checkIntervalMinutes: 5,
 };
 
+export interface RepositoryNotificationSettings {
+  notifyOnNewPR: boolean;
+  enableReminders: boolean;
+  reminderIntervalHours: number;
+  notificationPriority: NotificationPriority;
+  doNotDisturb: boolean;
+}
+
 export interface IpcApi {
   // Repository
   listRepositories(): Promise<Repository[]>;
@@ -54,6 +70,10 @@ export interface IpcApi {
   removeRepository(id: string): Promise<void>;
   toggleRepository(id: string, enabled: boolean): Promise<void>;
   reorderRepositories(ids: string[]): Promise<void>;
+  updateRepositoryNotificationSettings(
+    id: string,
+    settings: RepositoryNotificationSettings
+  ): Promise<void>;
 
   // Settings
   getSettings(): Promise<Settings>;
@@ -83,6 +103,7 @@ export const IPC_CHANNELS = {
   REPO_REMOVE: "repo:remove",
   REPO_TOGGLE: "repo:toggle",
   REPO_REORDER: "repo:reorder",
+  REPO_UPDATE_NOTIFICATION_SETTINGS: "repo:update-notification-settings",
   SETTINGS_GET: "settings:get",
   SETTINGS_SET: "settings:set",
   PR_LIST: "pr:list",

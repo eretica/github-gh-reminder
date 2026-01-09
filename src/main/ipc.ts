@@ -12,6 +12,7 @@ import {
   IPC_CHANNELS,
   type PullRequest,
   type Repository,
+  type RepositoryNotificationSettings,
   type Settings,
 } from "../shared/types";
 import { getDatabase } from "./db";
@@ -37,6 +38,11 @@ export function setupIpcHandlers(): void {
       order: r.order,
       createdAt: r.createdAt,
       updatedAt: r.updatedAt,
+      notifyOnNewPR: r.notifyOnNewPR === 1,
+      enableReminders: r.enableReminders === 1,
+      reminderIntervalHours: r.reminderIntervalHours,
+      notificationPriority: r.notificationPriority as "low" | "normal" | "high",
+      doNotDisturb: r.doNotDisturb === 1,
     }));
   });
 
@@ -107,6 +113,11 @@ export function setupIpcHandlers(): void {
         order: newRepo.order!,
         createdAt: now,
         updatedAt: now,
+        notifyOnNewPR: true,
+        enableReminders: true,
+        reminderIntervalHours: 1,
+        notificationPriority: "normal",
+        doNotDisturb: false,
       };
     },
   );
@@ -153,6 +164,29 @@ export function setupIpcHandlers(): void {
           .set({ order: i, updatedAt: now })
           .where(eq(schema.repositories.id, ids[i]));
       }
+    },
+  );
+
+  ipcMain.handle(
+    IPC_CHANNELS.REPO_UPDATE_NOTIFICATION_SETTINGS,
+    async (
+      _,
+      id: string,
+      settings: RepositoryNotificationSettings,
+    ): Promise<void> => {
+      const db = getDatabase();
+      const now = new Date().toISOString();
+      await db
+        .update(schema.repositories)
+        .set({
+          notifyOnNewPR: settings.notifyOnNewPR ? 1 : 0,
+          enableReminders: settings.enableReminders ? 1 : 0,
+          reminderIntervalHours: settings.reminderIntervalHours,
+          notificationPriority: settings.notificationPriority,
+          doNotDisturb: settings.doNotDisturb ? 1 : 0,
+          updatedAt: now,
+        })
+        .where(eq(schema.repositories.id, id));
     },
   );
 

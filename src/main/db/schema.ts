@@ -8,6 +8,12 @@ export const repositories = sqliteTable("repositories", {
   order: integer("order").notNull().default(0),
   createdAt: text("created_at").notNull(),
   updatedAt: text("updated_at").notNull(),
+  // Notification settings
+  notifyOnNewPR: integer("notify_on_new_pr").notNull().default(1),
+  enableReminders: integer("enable_reminders").notNull().default(1),
+  reminderIntervalHours: integer("reminder_interval_hours").notNull().default(1),
+  notificationPriority: text("notification_priority").notNull().default("normal"), // 'low' | 'normal' | 'high'
+  doNotDisturb: integer("do_not_disturb").notNull().default(0),
 });
 
 export const settings = sqliteTable("settings", {

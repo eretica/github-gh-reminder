@@ -1,4 +1,5 @@
 import { useState } from "react";
+import type { RepositoryNotificationSettings } from "../../shared/types";
 import { RepositoryList } from "../components/RepositoryList";
 import { SettingsForm } from "../components/SettingsForm";
 import { Tabs } from "../components/Tabs";
@@ -24,6 +25,7 @@ export default function SettingsPage(): JSX.Element {
     removeRepository,
     toggleRepository,
     reorderRepositories,
+    updateNotificationSettings,
   } = useRepositories();
 
   const {
@@ -107,6 +109,23 @@ export default function SettingsPage(): JSX.Element {
     }
   };
 
+  const handleUpdateNotificationSettings = async (
+    id: string,
+    settings: RepositoryNotificationSettings,
+  ): Promise<void> => {
+    try {
+      await updateNotificationSettings(id, settings);
+      showToast("Notification settings updated successfully", "success");
+    } catch (error) {
+      showToast(
+        error instanceof Error
+          ? error.message
+          : "Failed to update notification settings",
+        "error",
+      );
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       {/* Header */}
@@ -160,6 +179,7 @@ export default function SettingsPage(): JSX.Element {
                 onRemove={handleRemoveRepository}
                 onReorder={handleReorderRepositories}
                 onAdd={handleAddRepository}
+                onUpdateNotificationSettings={handleUpdateNotificationSettings}
               />
             )}
           </div>

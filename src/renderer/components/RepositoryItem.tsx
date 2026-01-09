@@ -1,18 +1,30 @@
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import type { Repository } from "../../shared/types";
+import { useState } from "react";
+import type {
+  Repository,
+  RepositoryNotificationSettings,
+} from "../../shared/types";
+import { NotificationSettings } from "./NotificationSettings";
 
 interface RepositoryItemProps {
   repository: Repository;
   onToggle: (id: string, enabled: boolean) => void;
   onRemove: (id: string) => void;
+  onUpdateNotificationSettings: (
+    id: string,
+    settings: RepositoryNotificationSettings
+  ) => void;
 }
 
 export function RepositoryItem({
   repository,
   onToggle,
   onRemove,
+  onUpdateNotificationSettings,
 }: RepositoryItemProps): JSX.Element {
+  const [showSettings, setShowSettings] = useState(false);
+
   const {
     attributes,
     listeners,
@@ -28,6 +40,11 @@ export function RepositoryItem({
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isDragging ? 0.5 : 1,
+  };
+
+  const handleSaveSettings = (settings: RepositoryNotificationSettings): void => {
+    onUpdateNotificationSettings(repository.id, settings);
+    setShowSettings(false);
   };
 
   return (
@@ -69,6 +86,29 @@ export function RepositoryItem({
           </div>
         </div>
 
+        {/* Notification settings button */}
+        <button
+          onClick={() => setShowSettings(!showSettings)}
+          className={`transition-all duration-200 hover:scale-110 active:scale-95 ${
+            showSettings ? "text-blue-500" : "text-gray-400 hover:text-blue-500"
+          }`}
+          title="Notification settings"
+        >
+          <svg
+            className="w-5 h-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+            />
+          </svg>
+        </button>
+
         {/* Delete button */}
         <button
           onClick={() => onRemove(repository.id)}
@@ -90,6 +130,23 @@ export function RepositoryItem({
           </svg>
         </button>
       </div>
+
+      {/* Notification Settings Panel */}
+      {showSettings && (
+        <div className="mt-3">
+          <NotificationSettings
+            settings={{
+              notifyOnNewPR: repository.notifyOnNewPR,
+              enableReminders: repository.enableReminders,
+              reminderIntervalHours: repository.reminderIntervalHours,
+              notificationPriority: repository.notificationPriority,
+              doNotDisturb: repository.doNotDisturb,
+            }}
+            onSave={handleSaveSettings}
+            onCancel={() => setShowSettings(false)}
+          />
+        </div>
+      )}
     </div>
   );
 }

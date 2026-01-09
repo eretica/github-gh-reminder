@@ -13,7 +13,10 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { useState } from "react";
-import type { Repository } from "../../shared/types";
+import type {
+  Repository,
+  RepositoryNotificationSettings,
+} from "../../shared/types";
 import { ConfirmDialog } from "./ConfirmDialog";
 import { RepositoryItem } from "./RepositoryItem";
 
@@ -23,6 +26,10 @@ interface RepositoryListProps {
   onRemove: (id: string) => void;
   onReorder: (ids: string[]) => void;
   onAdd: () => void;
+  onUpdateNotificationSettings: (
+    id: string,
+    settings: RepositoryNotificationSettings
+  ) => void;
 }
 
 export function RepositoryList({
@@ -31,6 +38,7 @@ export function RepositoryList({
   onRemove,
   onReorder,
   onAdd,
+  onUpdateNotificationSettings,
 }: RepositoryListProps): JSX.Element {
   const [confirmDelete, setConfirmDelete] = useState<{
     id: string;
@@ -137,6 +145,7 @@ export function RepositoryList({
                   repository={repo}
                   onToggle={onToggle}
                   onRemove={handleRemoveClick}
+                  onUpdateNotificationSettings={onUpdateNotificationSettings}
                 />
               ))}
             </div>

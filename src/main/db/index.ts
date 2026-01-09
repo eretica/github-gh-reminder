@@ -62,10 +62,33 @@ export function initDatabase(): ReturnType<typeof drizzle<typeof schema>> {
 
   db = drizzle(sqlite, { schema });
 
+  // Run migrations
+  runMigrations();
+
   // Initialize default settings if not exist
   initDefaultSettings();
 
   return db;
+}
+
+function runMigrations(): void {
+  if (!sqlite) return;
+
+  // Migration: Add notification settings columns to repositories table
+  const tableInfo = sqlite
+    .prepare("PRAGMA table_info(repositories)")
+    .all() as Array<{ name: string }>;
+  const columnNames = tableInfo.map((col) => col.name);
+
+  if (!columnNames.includes("notify_on_new_pr")) {
+    sqlite.exec(`
+      ALTER TABLE repositories ADD COLUMN notify_on_new_pr INTEGER NOT NULL DEFAULT 1;
+      ALTER TABLE repositories ADD COLUMN enable_reminders INTEGER NOT NULL DEFAULT 1;
+      ALTER TABLE repositories ADD COLUMN reminder_interval_hours INTEGER NOT NULL DEFAULT 1;
+      ALTER TABLE repositories ADD COLUMN notification_priority TEXT NOT NULL DEFAULT 'normal';
+      ALTER TABLE repositories ADD COLUMN do_not_disturb INTEGER NOT NULL DEFAULT 0;
+    `);
+  }
 }
 
 function initDefaultSettings(): void {

@@ -4,6 +4,7 @@ import {
   type IpcApi,
   type PullRequest,
   type Repository,
+  type RepositoryNotificationSettings,
   type Settings,
 } from "../shared/types";
 
@@ -19,6 +20,15 @@ const api: IpcApi = {
     ipcRenderer.invoke(IPC_CHANNELS.REPO_TOGGLE, id, enabled),
   reorderRepositories: (ids: string[]): Promise<void> =>
     ipcRenderer.invoke(IPC_CHANNELS.REPO_REORDER, ids),
+  updateRepositoryNotificationSettings: (
+    id: string,
+    settings: RepositoryNotificationSettings,
+  ): Promise<void> =>
+    ipcRenderer.invoke(
+      IPC_CHANNELS.REPO_UPDATE_NOTIFICATION_SETTINGS,
+      id,
+      settings,
+    ),
 
   // Settings
   getSettings: (): Promise<Settings> =>

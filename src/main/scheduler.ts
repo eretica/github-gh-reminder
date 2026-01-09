@@ -92,6 +92,9 @@ class PRScheduler {
     const now = new Date().toISOString();
     const resultPRs: PullRequest[] = [];
 
+    // Check if Do Not Disturb is enabled for this repo
+    const dnd = repo.doNotDisturb === 1;
+
     // Get current PRs from this repo
     const existingPRs = await db
       .select()
@@ -119,6 +122,7 @@ class PRScheduler {
         existingPRMap.delete(ghPR.number);
       } else {
         // New PR
+        const shouldNotify = repo.notifyOnNewPR === 1 && !dnd;
         const newPR: schema.NewPullRequest = {
           id: uuidv4(),
           repositoryId: repo.id,
@@ -128,7 +132,7 @@ class PRScheduler {
           author: ghPR.author.login,
           createdAt: ghPR.createdAt,
           firstSeenAt: now,
-          notifiedAt: settings.notifyOnNew ? now : null,
+          notifiedAt: shouldNotify ? now : null,
           lastRemindedAt: null,
         };
 
@@ -139,9 +143,9 @@ class PRScheduler {
           repo.name,
         );
 
-        // Send notification for new PR
-        if (settings.notifyOnNew) {
-          notifyNewPR(pr);
+        // Send notification for new PR if enabled for this repo and not in DND mode
+        if (shouldNotify) {
+          notifyNewPR(pr, repo.notificationPriority as "low" | "normal" | "high");
         }
 
         resultPRs.push(pr);
@@ -163,66 +167,95 @@ class PRScheduler {
 
     const db = getDatabase();
     const now = new Date();
-    const reminderThreshold = new Date(
-      now.getTime() - settings.reminderIntervalHours * 60 * 60 * 1000,
-    );
 
-    // Get all PRs that haven't been reminded recently
-    const prsToRemind = await db
-      .select({
-        pr: schema.pullRequests,
-        repo: schema.repositories,
-      })
-      .from(schema.pullRequests)
-      .innerJoin(
-        schema.repositories,
-        eq(schema.pullRequests.repositoryId, schema.repositories.id),
-      )
-      .where(
-        and(
-          eq(schema.repositories.enabled, 1),
-          lt(
-            schema.pullRequests.lastRemindedAt,
-            reminderThreshold.toISOString(),
-          ),
-        ),
+    // Get all enabled repositories with their notification settings
+    const repos = await db
+      .select()
+      .from(schema.repositories)
+      .where(eq(schema.repositories.enabled, 1));
+
+    const allPRsToRemind: Array<{
+      pr: schema.PullRequestRecord;
+      repo: schema.RepositoryRecord;
+    }> = [];
+
+    // Process each repository with its own reminder interval
+    for (const repo of repos) {
+      // Skip if reminders are disabled for this repo or it's in DND mode
+      if (repo.enableReminders === 0 || repo.doNotDisturb === 1) {
+        continue;
+      }
+
+      const reminderThreshold = new Date(
+        now.getTime() - repo.reminderIntervalHours * 60 * 60 * 1000,
       );
 
-    // Also get PRs that have never been reminded
-    const neverRemindedPRs = await db
-      .select({
-        pr: schema.pullRequests,
-        repo: schema.repositories,
-      })
-      .from(schema.pullRequests)
-      .innerJoin(
-        schema.repositories,
-        eq(schema.pullRequests.repositoryId, schema.repositories.id),
-      )
-      .where(and(eq(schema.repositories.enabled, 1)));
+      // Get PRs that haven't been reminded recently
+      const prsToRemind = await db
+        .select()
+        .from(schema.pullRequests)
+        .where(
+          and(
+            eq(schema.pullRequests.repositoryId, repo.id),
+            lt(
+              schema.pullRequests.lastRemindedAt,
+              reminderThreshold.toISOString(),
+            ),
+          ),
+        );
 
-    const allPRsToRemind = [
-      ...prsToRemind,
-      ...neverRemindedPRs.filter((item) => item.pr.lastRemindedAt === null),
-    ];
+      // Also get PRs that have never been reminded
+      const neverRemindedPRs = await db
+        .select()
+        .from(schema.pullRequests)
+        .where(
+          and(
+            eq(schema.pullRequests.repositoryId, repo.id),
+            eq(schema.pullRequests.lastRemindedAt, null),
+          ),
+        );
 
-    // Remove duplicates
-    const uniquePRs = Array.from(
-      new Map(allPRsToRemind.map((item) => [item.pr.id, item])).values(),
-    );
+      const repoPRs = [...prsToRemind, ...neverRemindedPRs];
 
-    if (uniquePRs.length === 0) return;
+      // Remove duplicates
+      const uniqueRepoPRs = Array.from(
+        new Map(repoPRs.map((pr) => [pr.id, pr])).values(),
+      );
 
-    const frontendPRs = uniquePRs.map((item) =>
-      this.toFrontendPR(item.pr, item.repo.name),
-    );
+      // Add to the list with repo info
+      for (const pr of uniqueRepoPRs) {
+        allPRsToRemind.push({ pr, repo });
+      }
+    }
 
-    // Send reminder notification
-    notifyReminder(frontendPRs);
+    if (allPRsToRemind.length === 0) return;
+
+    // Group PRs by priority
+    const prsByPriority = new Map<
+      "low" | "normal" | "high",
+      Array<{ pr: schema.PullRequestRecord; repo: schema.RepositoryRecord }>
+    >();
+
+    for (const item of allPRsToRemind) {
+      const priority = item.repo
+        .notificationPriority as "low" | "normal" | "high";
+      if (!prsByPriority.has(priority)) {
+        prsByPriority.set(priority, []);
+      }
+      prsByPriority.get(priority)!.push(item);
+    }
+
+    // Send reminders for each priority group
+    for (const [priority, items] of prsByPriority) {
+      const frontendPRs = items.map((item) =>
+        this.toFrontendPR(item.pr, item.repo.name),
+      );
+      notifyReminder(frontendPRs, priority);
+    }
 
     // Update last reminded time
     const nowStr = now.toISOString();
-    for (const item of uniquePRs) {
+    for (const item of allPRsToRemind) {
       await db
         .update(schema.pullRequests)
         .set({ lastRemindedAt: nowStr })

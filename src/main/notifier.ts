@@ -15,6 +15,7 @@ export interface NotifierDeps {
     title: string;
     body: string;
     silent: boolean;
+    urgency?: "low" | "normal" | "critical";
   }) => NotificationLike;
   openExternal: (url: string) => void;
   getTray: () => { getBounds: () => Electron.Rectangle } | null;
@@ -33,12 +34,20 @@ const defaultDeps: NotifierDeps = {
 
 export function notifyNewPR(
   pr: PullRequest,
+  priority: "low" | "normal" | "high" = "normal",
   deps: NotifierDeps = defaultDeps,
 ): void {
+  const urgencyMap = {
+    low: "low" as const,
+    normal: "normal" as const,
+    high: "critical" as const,
+  };
+
   const notification = deps.createNotification({
     title: "New PR Review Request",
     body: `${pr.repositoryName}: #${pr.prNumber} ${pr.title}\nby @${pr.author}`,
-    silent: false,
+    silent: priority === "low",
+    urgency: urgencyMap[priority],
   });
 
   notification.on("click", () => {
@@ -54,9 +63,16 @@ export function notifyNewPR(
 
 export function notifyReminder(
   prs: PullRequest[],
+  priority: "low" | "normal" | "high" = "normal",
   deps: NotifierDeps = defaultDeps,
 ): void {
   if (prs.length === 0) return;
+
+  const urgencyMap = {
+    low: "low" as const,
+    normal: "normal" as const,
+    high: "critical" as const,
+  };
 
   const count = prs.length;
   const body =
@@ -67,7 +83,8 @@ export function notifyReminder(
   const notification = deps.createNotification({
     title: "PR Review Reminder",
     body,
-    silent: false,
+    silent: priority === "low",
+    urgency: urgencyMap[priority],
   });
 
   notification.on("click", () => {
