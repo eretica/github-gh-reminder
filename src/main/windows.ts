@@ -10,54 +10,107 @@ export function setTrayBounds(bounds: Rectangle): void {
   trayBounds = bounds;
 }
 
-function getWindowPositionNearTray(
+/**
+ * Calculate initial window position centered below tray icon
+ */
+function calculateCenteredPosition(
+  trayBounds: Rectangle,
   windowWidth: number,
-  windowHeight: number,
 ): { x: number; y: number } {
-  if (trayBounds) {
-    const primaryDisplay = screen.getPrimaryDisplay();
-    const { width: screenWidth, height: screenHeight } =
-      primaryDisplay.workAreaSize;
+  const x = Math.round(trayBounds.x + trayBounds.width / 2 - windowWidth / 2);
+  const y = trayBounds.y + trayBounds.height;
+  return { x, y };
+}
 
-    // Position window below tray icon, centered horizontally
-    let x = Math.round(trayBounds.x + trayBounds.width / 2 - windowWidth / 2);
-    let y = trayBounds.y + trayBounds.height;
+/**
+ * Apply horizontal boundary constraints to keep window on screen
+ */
+function applyHorizontalBoundary(
+  x: number,
+  windowWidth: number,
+  screenWidth: number,
+): number {
+  const margin = 20;
+  if (x + windowWidth > screenWidth) {
+    return screenWidth - windowWidth - margin;
+  }
+  if (x < margin) {
+    return margin;
+  }
+  return x;
+}
 
-    // Horizontal boundary checks
-    if (x + windowWidth > screenWidth) {
-      x = screenWidth - windowWidth - 20;
+/**
+ * Apply vertical boundary constraints, trying above tray if needed
+ */
+function applyVerticalBoundary(
+  y: number,
+  windowHeight: number,
+  screenHeight: number,
+  trayBounds: Rectangle,
+): number {
+  const margin = 20;
+  const aboveGap = 10;
+
+  // Check if window fits below tray
+  if (y + windowHeight > screenHeight) {
+    // Try positioning above tray
+    const aboveY = trayBounds.y - windowHeight - aboveGap;
+    if (aboveY >= 0) {
+      return aboveY;
     }
-    if (x < 20) {
-      x = 20;
-    }
-
-    // Vertical boundary checks
-    if (y + windowHeight > screenHeight) {
-      // Try positioning above tray
-      const aboveY = trayBounds.y - windowHeight - 10;
-      if (aboveY >= 0) {
-        y = aboveY;
-      } else {
-        // If doesn't fit above or below, position at screen bottom
-        y = Math.max(0, screenHeight - windowHeight - 20);
-      }
-    }
-
-    // Final safety check for upper boundary
-    if (y < 0) {
-      y = 20;
-    }
-
-    return { x, y };
+    // If doesn't fit above or below, position at screen bottom
+    return Math.max(0, screenHeight - windowHeight - margin);
   }
 
-  // Fallback: position at top-right of primary display
+  // Final safety check for upper boundary
+  if (y < 0) {
+    return margin;
+  }
+
+  return y;
+}
+
+/**
+ * Get fallback position when tray bounds are not available
+ */
+function getFallbackPosition(windowWidth: number): { x: number; y: number } {
   const primaryDisplay = screen.getPrimaryDisplay();
   const { width: screenWidth } = primaryDisplay.workAreaSize;
   return {
     x: screenWidth - windowWidth - 20,
     y: 30,
   };
+}
+
+function getWindowPositionNearTray(
+  windowWidth: number,
+  windowHeight: number,
+): { x: number; y: number } {
+  if (!trayBounds) {
+    return getFallbackPosition(windowWidth);
+  }
+
+  const primaryDisplay = screen.getPrimaryDisplay();
+  const { width: screenWidth, height: screenHeight } =
+    primaryDisplay.workAreaSize;
+
+  // Calculate initial position centered below tray
+  const { x: initialX, y: initialY } = calculateCenteredPosition(
+    trayBounds,
+    windowWidth,
+  );
+
+  // Apply boundary constraints
+  const x = applyHorizontalBoundary(initialX, windowWidth, screenWidth);
+  const y = applyVerticalBoundary(
+    initialY,
+    windowHeight,
+    screenHeight,
+    trayBounds,
+  );
+
+  return { x, y };
 }
 
 export function createMainWindow(): BrowserWindow {

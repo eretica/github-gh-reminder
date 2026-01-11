@@ -4,7 +4,7 @@ import pkg from "electron-updater";
 
 const { autoUpdater } = pkg;
 
-import type { PullRequest } from "../shared/types";
+import { IPC_CHANNELS, type PullRequest } from "../shared/types";
 import { createMainWindow, setTrayBounds } from "./windows";
 
 // Dependencies interface for DI
@@ -77,15 +77,14 @@ function buildContextMenu(): Electron.Menu {
       label: "設定を開く",
       click: async () => {
         const mainWindow = createMainWindow();
-        // Wait for WebContents to be ready before navigating
+        // Wait for WebContents to be ready before sending IPC event
         if (mainWindow.webContents.isLoading()) {
           await new Promise<void>((resolve) => {
             mainWindow.webContents.once("did-finish-load", () => resolve());
           });
         }
-        await mainWindow.webContents.executeJavaScript(
-          'window.location.hash = "#/settings"',
-        );
+        // Send navigation event to renderer (secure alternative to executeJavaScript)
+        mainWindow.webContents.send(IPC_CHANNELS.NAVIGATE_TO_SETTINGS);
       },
     },
     {
