@@ -26,7 +26,9 @@ export function SettingsForm({
       formData.notifyOnNew !== settings.notifyOnNew ||
       formData.enableReminder !== settings.enableReminder ||
       formData.reminderIntervalHours !== settings.reminderIntervalHours ||
-      formData.checkIntervalMinutes !== settings.checkIntervalMinutes;
+      formData.checkIntervalMinutes !== settings.checkIntervalMinutes ||
+      formData.notifyOnNewSystemNotification !== settings.notifyOnNewSystemNotification ||
+      formData.notifyReminderSystemNotification !== settings.notifyReminderSystemNotification;
 
     setHasChanges(changed);
   }, [formData, settings]);
@@ -50,7 +52,54 @@ export function SettingsForm({
 
   return (
     <div className="space-y-6">
-      {/* Notification Settings */}
+      {/* System Notification Settings */}
+      <div className="space-y-4">
+        <h3 className="text-sm font-medium text-gray-700">
+          System Notifications
+        </h3>
+
+        {/* System notification for review requests */}
+        <label className="flex items-start gap-3">
+          <input
+            type="checkbox"
+            checked={formData.notifyOnNewSystemNotification}
+            onChange={(e) =>
+              setFormData({ ...formData, notifyOnNewSystemNotification: e.target.checked })
+            }
+            className="mt-1 h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+          />
+          <div>
+            <span className="text-sm text-gray-900">
+              Enable system notifications for review requests
+            </span>
+            <p className="text-xs text-gray-500 mt-0.5">
+              Show system notification when a new pull request requires your review
+            </p>
+          </div>
+        </label>
+
+        {/* System notification for reminders */}
+        <label className="flex items-start gap-3">
+          <input
+            type="checkbox"
+            checked={formData.notifyReminderSystemNotification}
+            onChange={(e) =>
+              setFormData({ ...formData, notifyReminderSystemNotification: e.target.checked })
+            }
+            className="mt-1 h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+          />
+          <div>
+            <span className="text-sm text-gray-900">
+              Enable system notifications for reminders
+            </span>
+            <p className="text-xs text-gray-500 mt-0.5">
+              Show system notification for periodic review reminders
+            </p>
+          </div>
+        </label>
+      </div>
+
+      {/* Notification Timing */}
       <div className="space-y-4">
         <h3 className="text-sm font-medium text-gray-700">
           Notification Timing
@@ -71,7 +120,7 @@ export function SettingsForm({
               Notify when new PR is assigned
             </span>
             <p className="text-xs text-gray-500 mt-0.5">
-              Show a notification when a new pull request requires your review
+              Track and show new pull requests in the app (independent of system notifications)
             </p>
           </div>
         </label>

@@ -18,6 +18,8 @@ export class SettingsRepository {
       enableReminder: settingsMap.get("enableReminder") ?? true,
       reminderIntervalHours: settingsMap.get("reminderIntervalHours") ?? 4,
       checkIntervalMinutes: settingsMap.get("checkIntervalMinutes") ?? 5,
+      notifyOnNewSystemNotification: settingsMap.get("notifyOnNewSystemNotification") ?? true,
+      notifyReminderSystemNotification: settingsMap.get("notifyReminderSystemNotification") ?? true,
     };
   }
 

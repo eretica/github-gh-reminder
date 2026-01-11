@@ -140,7 +140,7 @@ class PRScheduler {
         );
 
         // Send notification for new PR
-        if (settings.notifyOnNew) {
+        if (settings.notifyOnNew && settings.notifyOnNewSystemNotification) {
           notifyNewPR(pr);
         }
 
@@ -218,7 +218,9 @@ class PRScheduler {
     );
 
     // Send reminder notification
-    notifyReminder(frontendPRs);
+    if (settings.notifyReminderSystemNotification) {
+      notifyReminder(frontendPRs);
+    }
 
     // Update last reminded time
     const nowStr = now.toISOString();

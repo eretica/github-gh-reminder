@@ -38,6 +38,8 @@ export interface Settings {
   enableReminder: boolean;
   reminderIntervalHours: number;
   checkIntervalMinutes: number;
+  notifyOnNewSystemNotification: boolean;
+  notifyReminderSystemNotification: boolean;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -45,6 +47,8 @@ export const DEFAULT_SETTINGS: Settings = {
   enableReminder: true,
   reminderIntervalHours: 1,
   checkIntervalMinutes: 5,
+  notifyOnNewSystemNotification: true,
+  notifyReminderSystemNotification: true,
 };
 
 export interface IpcApi {
