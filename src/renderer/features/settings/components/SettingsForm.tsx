@@ -26,7 +26,10 @@ export function SettingsForm({
       formData.notifyOnNew !== settings.notifyOnNew ||
       formData.enableReminder !== settings.enableReminder ||
       formData.reminderIntervalHours !== settings.reminderIntervalHours ||
-      formData.checkIntervalMinutes !== settings.checkIntervalMinutes;
+      formData.checkIntervalMinutes !== settings.checkIntervalMinutes ||
+      formData.notifyReviewRequestEnabled !==
+        settings.notifyReviewRequestEnabled ||
+      formData.notifyReminderEnabled !== settings.notifyReminderEnabled;
 
     setHasChanges(changed);
   }, [formData, settings]);
@@ -50,7 +53,60 @@ export function SettingsForm({
 
   return (
     <div className="space-y-6">
-      {/* Notification Settings */}
+      {/* System Notification Settings */}
+      <div className="space-y-4">
+        <h3 className="text-sm font-medium text-gray-700">
+          System Notifications
+        </h3>
+
+        {/* Review Request Notification Toggle */}
+        <label className="flex items-start gap-3">
+          <input
+            type="checkbox"
+            checked={formData.notifyReviewRequestEnabled}
+            onChange={(e) =>
+              setFormData({
+                ...formData,
+                notifyReviewRequestEnabled: e.target.checked,
+              })
+            }
+            className="mt-1 h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+          />
+          <div>
+            <span className="text-sm text-gray-900">
+              Enable review request notifications
+            </span>
+            <p className="text-xs text-gray-500 mt-0.5">
+              Show system notifications when new PRs are assigned for review
+            </p>
+          </div>
+        </label>
+
+        {/* Reminder Notification Toggle */}
+        <label className="flex items-start gap-3">
+          <input
+            type="checkbox"
+            checked={formData.notifyReminderEnabled}
+            onChange={(e) =>
+              setFormData({
+                ...formData,
+                notifyReminderEnabled: e.target.checked,
+              })
+            }
+            className="mt-1 h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+          />
+          <div>
+            <span className="text-sm text-gray-900">
+              Enable reminder notifications
+            </span>
+            <p className="text-xs text-gray-500 mt-0.5">
+              Show system notifications for periodic reminders
+            </p>
+          </div>
+        </label>
+      </div>
+
+      {/* Notification Timing */}
       <div className="space-y-4">
         <h3 className="text-sm font-medium text-gray-700">
           Notification Timing

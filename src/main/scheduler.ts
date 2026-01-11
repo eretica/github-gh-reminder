@@ -140,7 +140,7 @@ class PRScheduler {
         );
 
         // Send notification for new PR
-        if (settings.notifyOnNew) {
+        if (settings.notifyOnNew && settings.notifyReviewRequestEnabled) {
           notifyNewPR(pr);
         }
 
@@ -159,7 +159,7 @@ class PRScheduler {
   }
 
   private async sendReminders(settings: Settings): Promise<void> {
-    if (!settings.enableReminder) return;
+    if (!settings.enableReminder || !settings.notifyReminderEnabled) return;
 
     const db = getDatabase();
     const now = new Date();

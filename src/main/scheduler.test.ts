@@ -44,6 +44,8 @@ describe("PRScheduler", () => {
     enableReminder: true,
     reminderIntervalHours: 1,
     checkIntervalMinutes: 5,
+    notifyReviewRequestEnabled: true,
+    notifyReminderEnabled: true,
   };
 
   let mockDb: {
@@ -418,6 +420,97 @@ describe("PRScheduler", () => {
 
       expect(mockNotifyNewPR).not.toHaveBeenCalled();
     });
+
+    it("does not notify for new PRs when notifyReviewRequestEnabled is false", async () => {
+      const settings = { ...defaultSettings, notifyReviewRequestEnabled: false };
+
+      const repo = {
+        id: "repo1",
+        path: "/path/to/repo",
+        name: "owner/repo",
+        enabled: 1,
+        order: 0,
+        createdAt: "2024-01-01",
+        updatedAt: "2024-01-01",
+      };
+
+      const ghPR = {
+        number: 123,
+        title: "New PR",
+        url: "https://github.com/owner/repo/pull/123",
+        author: { login: "testuser" },
+        createdAt: "2024-01-01T00:00:00Z",
+      };
+
+      // Setup mocks
+      const mockSelectFrom = vi.fn();
+      const mockWhere = vi.fn();
+
+      mockDb.select.mockReturnValue({ from: mockSelectFrom });
+      mockSelectFrom.mockReturnValue({ where: mockWhere });
+
+      let callCount = 0;
+      mockWhere.mockImplementation(() => {
+        callCount++;
+        if (callCount === 1) return Promise.resolve([repo]);
+        return Promise.resolve([]);
+      });
+
+      mockFetchPRs.mockReturnValue([ghPR]);
+
+      const mockInsertValues = vi.fn().mockResolvedValue(undefined);
+      mockDb.insert.mockReturnValue({ values: mockInsertValues });
+
+      await scheduler.checkAllRepositories(settings);
+
+      expect(mockNotifyNewPR).not.toHaveBeenCalled();
+    });
+
+    it("does not notify for new PRs when both notifyOnNew and notifyReviewRequestEnabled must be true", async () => {
+      // Test notifyOnNew=true but notifyReviewRequestEnabled=false
+      const settings1 = { ...defaultSettings, notifyOnNew: true, notifyReviewRequestEnabled: false };
+
+      const repo = {
+        id: "repo1",
+        path: "/path/to/repo",
+        name: "owner/repo",
+        enabled: 1,
+        order: 0,
+        createdAt: "2024-01-01",
+        updatedAt: "2024-01-01",
+      };
+
+      const ghPR = {
+        number: 123,
+        title: "New PR",
+        url: "https://github.com/owner/repo/pull/123",
+        author: { login: "testuser" },
+        createdAt: "2024-01-01T00:00:00Z",
+      };
+
+      // Setup mocks
+      const mockSelectFrom = vi.fn();
+      const mockWhere = vi.fn();
+
+      mockDb.select.mockReturnValue({ from: mockSelectFrom });
+      mockSelectFrom.mockReturnValue({ where: mockWhere });
+
+      let callCount = 0;
+      mockWhere.mockImplementation(() => {
+        callCount++;
+        if (callCount === 1) return Promise.resolve([repo]);
+        return Promise.resolve([]);
+      });
+
+      mockFetchPRs.mockReturnValue([ghPR]);
+
+      const mockInsertValues = vi.fn().mockResolvedValue(undefined);
+      mockDb.insert.mockReturnValue({ values: mockInsertValues });
+
+      await scheduler.checkAllRepositories(settings1);
+
+      expect(mockNotifyNewPR).not.toHaveBeenCalled();
+    });
   });
 
   describe("PR update handling", () => {
@@ -598,6 +691,48 @@ describe("PRScheduler", () => {
       // Advance time - but reminder should not be triggered
       await vi.advanceTimersByTimeAsync(2 * 60 * 60 * 1000);
 
+      expect(mockNotifyReminder).not.toHaveBeenCalled();
+    });
+
+    it("does not send reminders when notifyReminderEnabled is false", async () => {
+      const settings = { ...defaultSettings, notifyReminderEnabled: false };
+
+      const prData = [
+        {
+          pr: {
+            id: "pr1",
+            repositoryId: "repo1",
+            prNumber: 123,
+            title: "Test PR",
+            url: "https://github.com/owner/repo/pull/123",
+            author: "testuser",
+            createdAt: "2024-01-01T00:00:00Z",
+            firstSeenAt: "2024-01-01T00:00:00Z",
+            notifiedAt: null,
+            lastRemindedAt: null,
+          },
+          repo: { name: "owner/repo", id: "repo1", enabled: 1 },
+        },
+      ];
+
+      const mockSelectFrom = vi.fn();
+      const mockInnerJoin = vi.fn();
+      const mockWhere = vi.fn();
+
+      mockDb.select.mockReturnValue({ from: mockSelectFrom });
+      mockSelectFrom.mockReturnValue({
+        innerJoin: mockInnerJoin,
+        where: mockWhere,
+      });
+      mockInnerJoin.mockReturnValue({ where: mockWhere });
+      mockWhere.mockResolvedValue(prData);
+
+      scheduler.start(settings);
+
+      // Advance time to trigger reminder check
+      await vi.advanceTimersByTimeAsync(1 * 60 * 60 * 1000);
+
+      // Reminder should not be sent even though there are PRs
       expect(mockNotifyReminder).not.toHaveBeenCalled();
     });
 
