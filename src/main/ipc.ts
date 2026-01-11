@@ -202,18 +202,12 @@ export function setupIpcHandlers(): void {
   // Window handlers
   ipcMain.handle(IPC_CHANNELS.OPEN_SETTINGS, async (event): Promise<void> => {
     // Navigate to settings page within the same window
-    const window = BrowserWindow.fromWebContents(event.sender);
-    if (window) {
-      window.webContents.send("navigate", "#/settings");
-    }
+    await event.sender.executeJavaScript('window.location.hash = "#/settings"');
   });
 
   ipcMain.handle(IPC_CHANNELS.CLOSE_SETTINGS, async (event): Promise<void> => {
     // Navigate back to main page within the same window
-    const window = BrowserWindow.fromWebContents(event.sender);
-    if (window) {
-      window.webContents.send("navigate", "#/");
-    }
+    await event.sender.executeJavaScript('window.location.hash = "#/"');
   });
 
   ipcMain.handle(IPC_CHANNELS.QUIT_APP, async (): Promise<void> => {

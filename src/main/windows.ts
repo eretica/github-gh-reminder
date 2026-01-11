@@ -23,16 +23,29 @@ function getWindowPositionNearTray(
     let x = Math.round(trayBounds.x + trayBounds.width / 2 - windowWidth / 2);
     let y = trayBounds.y + trayBounds.height;
 
-    // Screen boundary checks
+    // Horizontal boundary checks
     if (x + windowWidth > screenWidth) {
       x = screenWidth - windowWidth - 20;
     }
     if (x < 20) {
       x = 20;
     }
+
+    // Vertical boundary checks
     if (y + windowHeight > screenHeight) {
-      // If doesn't fit below tray, position it above
-      y = trayBounds.y - windowHeight - 10;
+      // Try positioning above tray
+      const aboveY = trayBounds.y - windowHeight - 10;
+      if (aboveY >= 0) {
+        y = aboveY;
+      } else {
+        // If doesn't fit above or below, position at screen bottom
+        y = Math.max(0, screenHeight - windowHeight - 20);
+      }
+    }
+
+    // Final safety check for upper boundary
+    if (y < 0) {
+      y = 20;
     }
 
     return { x, y };
