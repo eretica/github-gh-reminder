@@ -7,7 +7,6 @@ const { autoUpdater } = pkg;
 import type { PullRequest } from "../shared/types";
 import {
   createMainWindow,
-  createSettingsWindow,
   setTrayBounds,
 } from "./windows";
 
@@ -58,36 +57,31 @@ export function createTray(injectedDeps: TrayDeps = defaultDeps): Tray {
   tray = deps.createTrayInstance(icon) as Tray;
   tray.setToolTip("GitHub PR Reminder");
 
-  // Click to show window (no context menu)
-  // Always show the menu window regardless of PR count
+  // Left-click to show main window
   tray.on("click", (_event, bounds) => {
     if (!deps) return;
     deps.setTrayBounds(bounds);
     deps.createMainWindow();
   });
 
+  // Right-click to show context menu
+  tray.on("right-click", () => {
+    if (!tray) return;
+    const menu = buildContextMenu();
+    tray.popUpContextMenu(menu);
+  });
+
   return tray;
 }
 
-export function updateTrayMenu(prs: PullRequest[]): void {
-  if (!tray || !deps) return;
-
-  currentPRs = prs;
-  const prCount = prs.length;
-  const hasPRs = prCount > 0;
-
-  // Update icon based on PR count (badge or no badge)
-  tray.setImage(deps.createIcon(hasPRs));
-
-  // Update title with PR count (shown next to tray icon)
-  tray.setTitle(hasPRs ? `${prCount}` : "");
-
-  // Update context menu
-  const contextMenu = Menu.buildFromTemplate([
+function buildContextMenu(): Electron.Menu {
+  return Menu.buildFromTemplate([
     {
       label: "設定を開く",
       click: () => {
-        createSettingsWindow();
+        const mainWindow = createMainWindow();
+        // Navigate to settings page within the main window
+        mainWindow.webContents.executeJavaScript('window.location.hash = "#/settings"');
       },
     },
     {
@@ -104,8 +98,23 @@ export function updateTrayMenu(prs: PullRequest[]): void {
       },
     },
   ]);
+}
 
-  tray.setContextMenu(contextMenu);
+export function updateTrayMenu(prs: PullRequest[]): void {
+  if (!tray || !deps) return;
+
+  currentPRs = prs;
+  const prCount = prs.length;
+  const hasPRs = prCount > 0;
+
+  // Update icon based on PR count (badge or no badge)
+  tray.setImage(deps.createIcon(hasPRs));
+
+  // Update title with PR count (shown next to tray icon)
+  tray.setTitle(hasPRs ? `${prCount}` : "");
+
+  // Context menu is only shown on right-click (see createTray)
+  // No need to call setContextMenu() here
 }
 
 export function getCurrentPRs(): PullRequest[] {

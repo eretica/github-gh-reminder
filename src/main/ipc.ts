@@ -19,7 +19,6 @@ import * as schema from "./db/schema";
 import { getRepoName, isGitRepository } from "./gh-cli";
 import { scheduler } from "./scheduler";
 import { updateTrayMenu } from "./tray";
-import { createSettingsWindow } from "./windows";
 
 export function setupIpcHandlers(): void {
   // Repository handlers
@@ -201,13 +200,20 @@ export function setupIpcHandlers(): void {
   );
 
   // Window handlers
-  ipcMain.handle(IPC_CHANNELS.OPEN_SETTINGS, async (): Promise<void> => {
-    createSettingsWindow();
+  ipcMain.handle(IPC_CHANNELS.OPEN_SETTINGS, async (event): Promise<void> => {
+    // Navigate to settings page within the same window
+    const window = BrowserWindow.fromWebContents(event.sender);
+    if (window) {
+      window.webContents.send("navigate", "#/settings");
+    }
   });
 
   ipcMain.handle(IPC_CHANNELS.CLOSE_SETTINGS, async (event): Promise<void> => {
+    // Navigate back to main page within the same window
     const window = BrowserWindow.fromWebContents(event.sender);
-    window?.close();
+    if (window) {
+      window.webContents.send("navigate", "#/");
+    }
   });
 
   ipcMain.handle(IPC_CHANNELS.QUIT_APP, async (): Promise<void> => {

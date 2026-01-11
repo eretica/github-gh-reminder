@@ -12,12 +12,28 @@ export function setTrayBounds(bounds: Rectangle): void {
 
 function getWindowPositionNearTray(
   windowWidth: number,
-  _windowHeight: number,
+  windowHeight: number,
 ): { x: number; y: number } {
   if (trayBounds) {
+    const primaryDisplay = screen.getPrimaryDisplay();
+    const { width: screenWidth, height: screenHeight } = primaryDisplay.workAreaSize;
+
     // Position window below tray icon, centered horizontally
-    const x = Math.round(trayBounds.x + trayBounds.width / 2 - windowWidth / 2);
-    const y = trayBounds.y + trayBounds.height;
+    let x = Math.round(trayBounds.x + trayBounds.width / 2 - windowWidth / 2);
+    let y = trayBounds.y + trayBounds.height;
+
+    // Screen boundary checks
+    if (x + windowWidth > screenWidth) {
+      x = screenWidth - windowWidth - 20;
+    }
+    if (x < 20) {
+      x = 20;
+    }
+    if (y + windowHeight > screenHeight) {
+      // If doesn't fit below tray, position it above
+      y = trayBounds.y - windowHeight - 10;
+    }
+
     return { x, y };
   }
 
@@ -100,20 +116,36 @@ export function createMainWindow(): BrowserWindow {
 }
 
 export function createSettingsWindow(): BrowserWindow {
+  // Note: This function is deprecated and kept for backward compatibility
+  // Settings now open within the main window via hash navigation
   if (settingsWindow && !settingsWindow.isDestroyed()) {
     settingsWindow.show();
     settingsWindow.focus();
     return settingsWindow;
   }
 
+  const windowWidth = 600;
+  const windowHeight = 600;
+  const { x, y } = getWindowPositionNearTray(windowWidth, windowHeight);
+
   settingsWindow = new BrowserWindow({
-    width: 600,
-    height: 500,
-    minWidth: 500,
-    minHeight: 400,
+    width: windowWidth,
+    height: windowHeight,
+    x,
+    y,
+    minWidth: 550,
+    minHeight: 500,
     show: false,
+    frame: false,
+    transparent: true,
+    resizable: false,
+    movable: false,
+    alwaysOnTop: true,
     skipTaskbar: true,
     autoHideMenuBar: true,
+    hasShadow: false,
+    vibrancy: "popover",
+    visualEffectState: "active",
     title: "PR Reminder - Settings",
     webPreferences: {
       preload: join(__dirname, "../preload/index.mjs"),
@@ -123,8 +155,15 @@ export function createSettingsWindow(): BrowserWindow {
     },
   });
 
+  settingsWindow.setVisibleOnAllWorkspaces(true);
+
   settingsWindow.on("ready-to-show", () => {
     settingsWindow?.show();
+  });
+
+  // Hide window when it loses focus (like a popover)
+  settingsWindow.on("blur", () => {
+    settingsWindow?.hide();
   });
 
   settingsWindow.on("closed", () => {

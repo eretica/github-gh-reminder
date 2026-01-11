@@ -20,6 +20,24 @@ log.info("App starting...");
 autoUpdater.logger = log;
 autoUpdater.autoDownload = false; // Manually trigger download after user notification
 
+// On macOS, hide from Dock and Cmd+Tab before the app is ready
+if (process.platform === "darwin" && app.dock) {
+  // setActivationPolicy is the preferred method (hides from both Dock and Cmd+Tab)
+  if (typeof app.dock.setActivationPolicy === 'function') {
+    try {
+      app.dock.setActivationPolicy("accessory");
+      log.info("Set activation policy to 'accessory'");
+    } catch (error) {
+      log.error("Failed to set activation policy:", error);
+      app.dock.hide();
+    }
+  } else {
+    // Fallback to hide() if setActivationPolicy is not available
+    log.warn("setActivationPolicy not available, using hide() instead");
+    app.dock.hide();
+  }
+}
+
 // Prevent multiple instances
 const gotTheLock = app.requestSingleInstanceLock();
 
@@ -43,11 +61,6 @@ if (!gotTheLock) {
   app.whenReady().then(async () => {
     // Set app user model id for windows
     electronApp.setAppUserModelId("com.pr-reminder.app");
-
-    // Hide dock icon on macOS (tray-only app)
-    if (process.platform === "darwin") {
-      app.dock.hide();
-    }
 
     // Default open or close DevTools by F12 in development
     app.on("browser-window-created", (_, window) => {

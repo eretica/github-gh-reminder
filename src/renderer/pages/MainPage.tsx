@@ -21,7 +21,7 @@ export default function MainPage(): JSX.Element {
   } = usePullRequests();
 
   const handleOpenSettings = (): void => {
-    window.api.openSettings();
+    window.location.hash = "#/settings";
   };
 
   const handleQuit = (): void => {

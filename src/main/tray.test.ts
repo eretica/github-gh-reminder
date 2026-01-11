@@ -49,24 +49,28 @@ function createMockDeps() {
         bounds: { x: number; y: number; width: number; height: number },
       ) => void)
     | null = null;
+  let rightClickHandler: (() => void) | null = null;
 
   const mockTray = {
     setToolTip: vi.fn(),
     setImage: vi.fn(),
     setTitle: vi.fn(),
     setContextMenu: vi.fn(),
+    popUpContextMenu: vi.fn(),
     destroy: vi.fn(),
     getBounds: vi.fn().mockReturnValue({ x: 100, y: 0, width: 22, height: 22 }),
     on: vi.fn(
       (
         event: string,
         handler: (
-          event: unknown,
-          bounds: { x: number; y: number; width: number; height: number },
+          event?: unknown,
+          bounds?: { x: number; y: number; width: number; height: number },
         ) => void,
       ) => {
         if (event === "click") {
           clickHandler = handler;
+        } else if (event === "right-click") {
+          rightClickHandler = handler;
         }
       },
     ),
@@ -85,6 +89,9 @@ function createMockDeps() {
     mockIcon,
     get clickHandler() {
       return clickHandler;
+    },
+    get rightClickHandler() {
+      return rightClickHandler;
     },
   };
 }
@@ -266,18 +273,35 @@ describe("tray", () => {
       expect(mockDeps.mockTray.setTitle).not.toHaveBeenCalled();
     });
 
-    it("sets context menu with update check option", () => {
-      createTray(mockDeps);
+    it("context menu is shown on right-click", () => {
+      const tray = createTray(mockDeps);
 
-      updateTrayMenu([]);
+      // Simulate right-click event
+      const rightClickHandler = mockDeps.mockTray.on.mock.calls.find(
+        (call) => call[0] === "right-click",
+      )?.[1];
 
-      expect(mockDeps.mockTray.setContextMenu).toHaveBeenCalled();
+      expect(rightClickHandler).toBeDefined();
+
+      // Trigger right-click
+      if (rightClickHandler) {
+        rightClickHandler();
+      }
+
+      expect(mockDeps.mockTray.popUpContextMenu).toHaveBeenCalled();
     });
 
-    it("builds context menu with correct items", () => {
+    it("context menu has correct items", () => {
       createTray(mockDeps);
 
-      updateTrayMenu([]);
+      // Simulate right-click to build menu
+      const rightClickHandler = mockDeps.mockTray.on.mock.calls.find(
+        (call) => call[0] === "right-click",
+      )?.[1];
+
+      if (rightClickHandler) {
+        rightClickHandler();
+      }
 
       expect(Menu.buildFromTemplate).toHaveBeenCalledWith(
         expect.arrayContaining([

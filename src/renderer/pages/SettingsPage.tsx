@@ -34,7 +34,7 @@ export default function SettingsPage(): JSX.Element {
   } = useSettings();
 
   const handleClose = (): void => {
-    window.api.closeSettings();
+    window.location.hash = "#/";
   };
 
   const handleAddRepository = async (): Promise<void> => {
@@ -108,9 +108,9 @@ export default function SettingsPage(): JSX.Element {
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-white rounded-lg shadow-xl border border-gray-200 overflow-hidden">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between">
+      <header className="bg-gray-50 border-b border-gray-200 px-4 py-3 flex items-center justify-between">
         <h1 className="text-lg font-semibold text-gray-900">
           GitHub PR Reminder Settings
         </h1>
