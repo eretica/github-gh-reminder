@@ -422,7 +422,10 @@ describe("PRScheduler", () => {
     });
 
     it("does not notify for new PRs when notifyReviewRequestEnabled is false", async () => {
-      const settings = { ...defaultSettings, notifyReviewRequestEnabled: false };
+      const settings = {
+        ...defaultSettings,
+        notifyReviewRequestEnabled: false,
+      };
 
       const repo = {
         id: "repo1",
@@ -468,7 +471,11 @@ describe("PRScheduler", () => {
 
     it("does not notify for new PRs when both notifyOnNew and notifyReviewRequestEnabled must be true", async () => {
       // Test notifyOnNew=true but notifyReviewRequestEnabled=false
-      const settings1 = { ...defaultSettings, notifyOnNew: true, notifyReviewRequestEnabled: false };
+      const settings1 = {
+        ...defaultSettings,
+        notifyOnNew: true,
+        notifyReviewRequestEnabled: false,
+      };
 
       const repo = {
         id: "repo1",
