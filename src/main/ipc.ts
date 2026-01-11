@@ -1,21 +1,18 @@
 import { basename } from "node:path";
-import { eq } from "drizzle-orm";
 import { app, BrowserWindow, dialog, ipcMain, shell } from "electron";
 import log from "electron-log/main.js";
 import pkg from "electron-updater";
 
 const { autoUpdater } = pkg;
 
-import { v4 as uuidv4 } from "uuid";
 import {
-  DEFAULT_SETTINGS,
   IPC_CHANNELS,
   type PullRequest,
   type Repository,
   type Settings,
 } from "../shared/types";
 import { getDatabase } from "./db";
-import * as schema from "./db/schema";
+import { RepositoryRepository, SettingsRepository } from "./db/repositories";
 import { getRepoName, isGitRepository } from "./gh-cli";
 import { scheduler } from "./scheduler";
 import { updateTrayMenu } from "./tray";
@@ -24,19 +21,8 @@ export function setupIpcHandlers(): void {
   // Repository handlers
   ipcMain.handle(IPC_CHANNELS.REPO_LIST, async (): Promise<Repository[]> => {
     const db = getDatabase();
-    const repos = await db
-      .select()
-      .from(schema.repositories)
-      .orderBy(schema.repositories.order);
-    return repos.map((r) => ({
-      id: r.id,
-      path: r.path,
-      name: r.name,
-      enabled: r.enabled === 1,
-      order: r.order,
-      createdAt: r.createdAt,
-      updatedAt: r.updatedAt,
-    }));
+    const repositoryRepo = new RepositoryRepository(db);
+    return await repositoryRepo.findAll();
   });
 
   ipcMain.handle(
@@ -60,14 +46,11 @@ export function setupIpcHandlers(): void {
       }
 
       const db = getDatabase();
+      const repositoryRepo = new RepositoryRepository(db);
 
       // Check if already registered
-      const existing = await db
-        .select()
-        .from(schema.repositories)
-        .where(eq(schema.repositories.path, path));
-
-      if (existing.length > 0) {
+      const existing = await repositoryRepo.findByPath(path);
+      if (existing) {
         throw new Error("This repository is already registered");
       }
 
@@ -75,38 +58,21 @@ export function setupIpcHandlers(): void {
       const repoName = getRepoName(path) || basename(path);
 
       // Get max order
-      const maxOrderResult = await db.select().from(schema.repositories);
-      const maxOrder = maxOrderResult.reduce(
-        (max, r) => Math.max(max, r.order),
-        -1,
-      );
+      const maxOrder = await repositoryRepo.getMaxOrder();
 
-      const now = new Date().toISOString();
-      const newRepo: schema.NewRepository = {
-        id: uuidv4(),
+      const newRepo = await repositoryRepo.create({
         path,
         name: repoName,
-        enabled: 1,
+        enabled: true,
         order: maxOrder + 1,
-        createdAt: now,
-        updatedAt: now,
-      };
-
-      await db.insert(schema.repositories).values(newRepo);
+      });
 
       // Refresh PRs after adding repo
-      const settings = await getSettingsFromDb();
+      const settingsRepo = new SettingsRepository(db);
+      const settings = await settingsRepo.getAll();
       scheduler.checkAllRepositories(settings);
 
-      return {
-        id: newRepo.id!,
-        path: newRepo.path,
-        name: newRepo.name,
-        enabled: true,
-        order: newRepo.order!,
-        createdAt: now,
-        updatedAt: now,
-      };
+      return newRepo;
     },
   );
 
@@ -114,9 +80,8 @@ export function setupIpcHandlers(): void {
     IPC_CHANNELS.REPO_REMOVE,
     async (_, id: string): Promise<void> => {
       const db = getDatabase();
-      await db
-        .delete(schema.repositories)
-        .where(eq(schema.repositories.id, id));
+      const repositoryRepo = new RepositoryRepository(db);
+      await repositoryRepo.delete(id);
 
       // Update tray after removing repo
       const prs = await scheduler.getAllPRs();
@@ -128,11 +93,8 @@ export function setupIpcHandlers(): void {
     IPC_CHANNELS.REPO_TOGGLE,
     async (_, id: string, enabled: boolean): Promise<void> => {
       const db = getDatabase();
-      const now = new Date().toISOString();
-      await db
-        .update(schema.repositories)
-        .set({ enabled: enabled ? 1 : 0, updatedAt: now })
-        .where(eq(schema.repositories.id, id));
+      const repositoryRepo = new RepositoryRepository(db);
+      await repositoryRepo.update(id, { enabled });
 
       // Update tray after toggle
       const prs = await scheduler.getAllPRs();
@@ -144,36 +106,27 @@ export function setupIpcHandlers(): void {
     IPC_CHANNELS.REPO_REORDER,
     async (_, ids: string[]): Promise<void> => {
       const db = getDatabase();
-      const now = new Date().toISOString();
+      const repositoryRepo = new RepositoryRepository(db);
 
       for (let i = 0; i < ids.length; i++) {
-        await db
-          .update(schema.repositories)
-          .set({ order: i, updatedAt: now })
-          .where(eq(schema.repositories.id, ids[i]));
+        await repositoryRepo.update(ids[i], { order: i });
       }
     },
   );
 
   // Settings handlers
   ipcMain.handle(IPC_CHANNELS.SETTINGS_GET, async (): Promise<Settings> => {
-    return getSettingsFromDb();
+    const db = getDatabase();
+    const settingsRepo = new SettingsRepository(db);
+    return await settingsRepo.getAll();
   });
 
   ipcMain.handle(
     IPC_CHANNELS.SETTINGS_SET,
     async (_, newSettings: Settings): Promise<void> => {
       const db = getDatabase();
-
-      for (const [key, value] of Object.entries(newSettings)) {
-        await db
-          .insert(schema.settings)
-          .values({ key, value: JSON.stringify(value) })
-          .onConflictDoUpdate({
-            target: schema.settings.key,
-            set: { value: JSON.stringify(value) },
-          });
-      }
+      const settingsRepo = new SettingsRepository(db);
+      await settingsRepo.setAll(newSettings);
 
       // Restart scheduler with new settings
       scheduler.restart(newSettings);
@@ -186,7 +139,9 @@ export function setupIpcHandlers(): void {
   });
 
   ipcMain.handle(IPC_CHANNELS.PR_REFRESH, async (): Promise<PullRequest[]> => {
-    const settings = await getSettingsFromDb();
+    const db = getDatabase();
+    const settingsRepo = new SettingsRepository(db);
+    const settings = await settingsRepo.getAll();
     const prs = await scheduler.checkAllRepositories(settings);
     updateTrayMenu(prs);
     return prs;
@@ -232,21 +187,6 @@ export function setupIpcHandlers(): void {
       throw new Error("アップデートのインストールに失敗しました");
     }
   });
-}
-
-async function getSettingsFromDb(): Promise<Settings> {
-  const db = getDatabase();
-  const rows = await db.select().from(schema.settings);
-
-  const result = { ...DEFAULT_SETTINGS };
-  for (const row of rows) {
-    const key = row.key as keyof Settings;
-    if (key in result) {
-      (result as Record<string, unknown>)[key] = JSON.parse(row.value);
-    }
-  }
-
-  return result;
 }
 
 export function sendPRUpdate(prs: PullRequest[]): void {

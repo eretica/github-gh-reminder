@@ -1,6 +1,6 @@
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import type { Repository } from "../../shared/types";
+import type { Repository } from "../../../../shared/types";
 
 interface RepositoryItemProps {
   repository: Repository;

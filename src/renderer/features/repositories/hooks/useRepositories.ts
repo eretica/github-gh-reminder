@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import type { Repository } from "../../shared/types";
+import type { Repository } from "../../../../shared/types";
 
 interface UseRepositoriesReturn {
   repositories: Repository[];

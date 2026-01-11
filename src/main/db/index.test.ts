@@ -28,6 +28,11 @@ vi.mock("drizzle-orm/better-sqlite3", () => ({
   drizzle: vi.fn(() => mockDrizzleInstance),
 }));
 
+// Mock migrate function
+vi.mock("drizzle-orm/better-sqlite3/migrator", () => ({
+  migrate: vi.fn(),
+}));
+
 // Mock electron
 vi.mock("electron", () => ({
   app: {
@@ -38,11 +43,13 @@ vi.mock("electron", () => ({
 // Import after mocks
 import Database from "better-sqlite3";
 import { drizzle } from "drizzle-orm/better-sqlite3";
+import { migrate } from "drizzle-orm/better-sqlite3/migrator";
 import { DEFAULT_SETTINGS } from "../../shared/types";
 import { closeDatabase, getDatabase, initDatabase } from "./index";
 
 const _MockDatabase = Database as unknown as Mock;
 const mockDrizzle = drizzle as unknown as Mock;
+const mockMigrate = migrate as unknown as Mock;
 
 describe("Database", () => {
   beforeEach(() => {
@@ -67,20 +74,22 @@ describe("Database", () => {
     it("creates tables", () => {
       initDatabase();
 
-      expect(mockExec).toHaveBeenCalled();
-      const sqlCall = mockExec.mock.calls[0][0];
-      expect(sqlCall).toContain("CREATE TABLE IF NOT EXISTS repositories");
-      expect(sqlCall).toContain("CREATE TABLE IF NOT EXISTS settings");
-      expect(sqlCall).toContain("CREATE TABLE IF NOT EXISTS pull_requests");
-      expect(sqlCall).toContain(
-        "CREATE TABLE IF NOT EXISTS notification_history",
+      // Now tables are created via migrations
+      expect(mockMigrate).toHaveBeenCalled();
+      expect(mockMigrate).toHaveBeenCalledWith(
+        mockDrizzleInstance,
+        expect.objectContaining({
+          migrationsFolder: expect.stringContaining("migrations"),
+        }),
       );
     });
 
     it("creates indexes", () => {
       initDatabase();
 
-      const sqlCall = mockExec.mock.calls[0][0];
+      // Indexes are created after migrations via exec
+      expect(mockExec).toHaveBeenCalled();
+      const sqlCall = mockExec.mock.calls[mockExec.mock.calls.length - 1][0];
       expect(sqlCall).toContain("CREATE INDEX IF NOT EXISTS idx_pr_repository");
       expect(sqlCall).toContain(
         "CREATE INDEX IF NOT EXISTS idx_notification_pr",
@@ -205,62 +214,27 @@ describe("Database", () => {
   });
 
   describe("table structure validation", () => {
-    it("repositories table has required fields", () => {
+    it("runs migrations on initialization", () => {
       initDatabase();
 
-      const sqlCall = mockExec.mock.calls[0][0];
-      expect(sqlCall).toContain("id TEXT PRIMARY KEY");
-      expect(sqlCall).toContain("path TEXT NOT NULL");
-      expect(sqlCall).toContain("name TEXT NOT NULL");
-      expect(sqlCall).toContain("enabled INTEGER NOT NULL DEFAULT 1");
-      expect(sqlCall).toContain('"order" INTEGER NOT NULL DEFAULT 0');
-      expect(sqlCall).toContain("created_at TEXT NOT NULL");
-      expect(sqlCall).toContain("updated_at TEXT NOT NULL");
-    });
-
-    it("pull_requests table has required fields", () => {
-      initDatabase();
-
-      const sqlCall = mockExec.mock.calls[0][0];
-      expect(sqlCall).toContain(
-        "repository_id TEXT NOT NULL REFERENCES repositories(id)",
+      expect(mockMigrate).toHaveBeenCalled();
+      expect(mockMigrate).toHaveBeenCalledWith(
+        mockDrizzleInstance,
+        expect.objectContaining({
+          migrationsFolder: expect.stringContaining("migrations"),
+        }),
       );
-      expect(sqlCall).toContain("pr_number INTEGER NOT NULL");
-      expect(sqlCall).toContain("title TEXT NOT NULL");
-      expect(sqlCall).toContain("url TEXT NOT NULL");
-      expect(sqlCall).toContain("author TEXT NOT NULL");
-      expect(sqlCall).toContain("first_seen_at TEXT NOT NULL");
-      expect(sqlCall).toContain("notified_at TEXT");
-      expect(sqlCall).toContain("last_reminded_at TEXT");
     });
 
-    it("pull_requests has cascade delete", () => {
+    it("creates indexes after migrations", () => {
       initDatabase();
 
-      const sqlCall = mockExec.mock.calls[0][0];
-      expect(sqlCall).toContain("ON DELETE CASCADE");
-    });
-
-    it("settings table has required fields", () => {
-      initDatabase();
-
-      const sqlCall = mockExec.mock.calls[0][0];
-      expect(sqlCall).toContain("key TEXT PRIMARY KEY");
-      expect(sqlCall).toContain("value TEXT NOT NULL");
-    });
-
-    it("notification_history table has required fields", () => {
-      initDatabase();
-
-      const sqlCall = mockExec.mock.calls[0][0];
+      expect(mockExec).toHaveBeenCalled();
+      const sqlCall = mockExec.mock.calls[mockExec.mock.calls.length - 1][0];
+      expect(sqlCall).toContain("CREATE INDEX IF NOT EXISTS idx_pr_repository");
       expect(sqlCall).toContain(
-        "CREATE TABLE IF NOT EXISTS notification_history",
+        "CREATE INDEX IF NOT EXISTS idx_notification_pr",
       );
-      expect(sqlCall).toContain(
-        "pr_id TEXT NOT NULL REFERENCES pull_requests(id)",
-      );
-      expect(sqlCall).toContain("type TEXT NOT NULL");
-      expect(sqlCall).toContain("notified_at TEXT NOT NULL");
     });
   });
 });

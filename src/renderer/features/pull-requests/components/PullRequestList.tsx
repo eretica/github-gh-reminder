@@ -1,4 +1,4 @@
-import type { PullRequest, Repository } from "../../shared/types";
+import type { PullRequest, Repository } from "../../../../shared/types";
 import { PullRequestItem } from "./PullRequestItem";
 
 interface PullRequestListProps {
