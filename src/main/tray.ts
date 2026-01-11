@@ -4,12 +4,8 @@ import pkg from "electron-updater";
 
 const { autoUpdater } = pkg;
 
-import type { PullRequest } from "../shared/types";
-import {
-  createMainWindow,
-  createSettingsWindow,
-  setTrayBounds,
-} from "./windows";
+import { IPC_CHANNELS, type PullRequest } from "../shared/types";
+import { createMainWindow, setTrayBounds } from "./windows";
 
 // Dependencies interface for DI
 export interface TrayDeps {
@@ -58,36 +54,37 @@ export function createTray(injectedDeps: TrayDeps = defaultDeps): Tray {
   tray = deps.createTrayInstance(icon) as Tray;
   tray.setToolTip("GitHub PR Reminder");
 
-  // Click to show window (no context menu)
-  // Always show the menu window regardless of PR count
+  // Left-click to show main window
   tray.on("click", (_event, bounds) => {
     if (!deps) return;
     deps.setTrayBounds(bounds);
     deps.createMainWindow();
   });
 
+  // Right-click to show context menu
+  tray.on("right-click", () => {
+    if (!tray) return;
+    const menu = buildContextMenu();
+    tray.popUpContextMenu(menu);
+  });
+
   return tray;
 }
 
-export function updateTrayMenu(prs: PullRequest[]): void {
-  if (!tray || !deps) return;
-
-  currentPRs = prs;
-  const prCount = prs.length;
-  const hasPRs = prCount > 0;
-
-  // Update icon based on PR count (badge or no badge)
-  tray.setImage(deps.createIcon(hasPRs));
-
-  // Update title with PR count (shown next to tray icon)
-  tray.setTitle(hasPRs ? `${prCount}` : "");
-
-  // Update context menu
-  const contextMenu = Menu.buildFromTemplate([
+function buildContextMenu(): Electron.Menu {
+  return Menu.buildFromTemplate([
     {
       label: "設定を開く",
-      click: () => {
-        createSettingsWindow();
+      click: async () => {
+        const mainWindow = createMainWindow();
+        // Wait for WebContents to be ready before sending IPC event
+        if (mainWindow.webContents.isLoading()) {
+          await new Promise<void>((resolve) => {
+            mainWindow.webContents.once("did-finish-load", () => resolve());
+          });
+        }
+        // Send navigation event to renderer (secure alternative to executeJavaScript)
+        mainWindow.webContents.send(IPC_CHANNELS.NAVIGATE_TO_SETTINGS);
       },
     },
     {
@@ -104,8 +101,23 @@ export function updateTrayMenu(prs: PullRequest[]): void {
       },
     },
   ]);
+}
 
-  tray.setContextMenu(contextMenu);
+export function updateTrayMenu(prs: PullRequest[]): void {
+  if (!tray || !deps) return;
+
+  currentPRs = prs;
+  const prCount = prs.length;
+  const hasPRs = prCount > 0;
+
+  // Update icon based on PR count (badge or no badge)
+  tray.setImage(deps.createIcon(hasPRs));
+
+  // Update title with PR count (shown next to tray icon)
+  tray.setTitle(hasPRs ? `${prCount}` : "");
+
+  // Context menu is only shown on right-click (see createTray)
+  // No need to call setContextMenu() here
 }
 
 export function getCurrentPRs(): PullRequest[] {

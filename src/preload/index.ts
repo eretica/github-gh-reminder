@@ -58,6 +58,22 @@ const api: IpcApi = {
       ipcRenderer.removeListener(IPC_CHANNELS.PR_UPDATED, listener);
     };
   },
+
+  // Navigation events
+  onNavigateToSettings: (callback: () => void): (() => void) => {
+    const listener = (): void => callback();
+    ipcRenderer.on(IPC_CHANNELS.NAVIGATE_TO_SETTINGS, listener);
+    return () => {
+      ipcRenderer.removeListener(IPC_CHANNELS.NAVIGATE_TO_SETTINGS, listener);
+    };
+  },
+  onNavigateToMain: (callback: () => void): (() => void) => {
+    const listener = (): void => callback();
+    ipcRenderer.on(IPC_CHANNELS.NAVIGATE_TO_MAIN, listener);
+    return () => {
+      ipcRenderer.removeListener(IPC_CHANNELS.NAVIGATE_TO_MAIN, listener);
+    };
+  },
 };
 
 contextBridge.exposeInMainWorld("api", api);

@@ -75,6 +75,8 @@ export interface IpcApi {
 
   // Events
   onPullRequestsUpdated(callback: (prs: PullRequest[]) => void): () => void;
+  onNavigateToSettings(callback: () => void): () => void;
+  onNavigateToMain(callback: () => void): () => void;
 }
 
 export const IPC_CHANNELS = {
@@ -94,4 +96,7 @@ export const IPC_CHANNELS = {
   QUIT_APP: "app:quit",
   UPDATE_CHECK: "update:check",
   UPDATE_INSTALL: "update:install",
+  // Navigation events (renderer -> renderer via main)
+  NAVIGATE_TO_SETTINGS: "navigate:to-settings",
+  NAVIGATE_TO_MAIN: "navigate:to-main",
 } as const;

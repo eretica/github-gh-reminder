@@ -10,24 +10,107 @@ export function setTrayBounds(bounds: Rectangle): void {
   trayBounds = bounds;
 }
 
-function getWindowPositionNearTray(
+/**
+ * Calculate initial window position centered below tray icon
+ */
+function calculateCenteredPosition(
+  trayBounds: Rectangle,
   windowWidth: number,
-  _windowHeight: number,
 ): { x: number; y: number } {
-  if (trayBounds) {
-    // Position window below tray icon, centered horizontally
-    const x = Math.round(trayBounds.x + trayBounds.width / 2 - windowWidth / 2);
-    const y = trayBounds.y + trayBounds.height;
-    return { x, y };
+  const x = Math.round(trayBounds.x + trayBounds.width / 2 - windowWidth / 2);
+  const y = trayBounds.y + trayBounds.height;
+  return { x, y };
+}
+
+/**
+ * Apply horizontal boundary constraints to keep window on screen
+ */
+function applyHorizontalBoundary(
+  x: number,
+  windowWidth: number,
+  screenWidth: number,
+): number {
+  const margin = 20;
+  if (x + windowWidth > screenWidth) {
+    return screenWidth - windowWidth - margin;
+  }
+  if (x < margin) {
+    return margin;
+  }
+  return x;
+}
+
+/**
+ * Apply vertical boundary constraints, trying above tray if needed
+ */
+function applyVerticalBoundary(
+  y: number,
+  windowHeight: number,
+  screenHeight: number,
+  trayBounds: Rectangle,
+): number {
+  const margin = 20;
+  const aboveGap = 10;
+
+  // Check if window fits below tray
+  if (y + windowHeight > screenHeight) {
+    // Try positioning above tray
+    const aboveY = trayBounds.y - windowHeight - aboveGap;
+    if (aboveY >= 0) {
+      return aboveY;
+    }
+    // If doesn't fit above or below, position at screen bottom
+    return Math.max(0, screenHeight - windowHeight - margin);
   }
 
-  // Fallback: position at top-right of primary display
+  // Final safety check for upper boundary
+  if (y < 0) {
+    return margin;
+  }
+
+  return y;
+}
+
+/**
+ * Get fallback position when tray bounds are not available
+ */
+function getFallbackPosition(windowWidth: number): { x: number; y: number } {
   const primaryDisplay = screen.getPrimaryDisplay();
   const { width: screenWidth } = primaryDisplay.workAreaSize;
   return {
     x: screenWidth - windowWidth - 20,
     y: 30,
   };
+}
+
+function getWindowPositionNearTray(
+  windowWidth: number,
+  windowHeight: number,
+): { x: number; y: number } {
+  if (!trayBounds) {
+    return getFallbackPosition(windowWidth);
+  }
+
+  const primaryDisplay = screen.getPrimaryDisplay();
+  const { width: screenWidth, height: screenHeight } =
+    primaryDisplay.workAreaSize;
+
+  // Calculate initial position centered below tray
+  const { x: initialX, y: initialY } = calculateCenteredPosition(
+    trayBounds,
+    windowWidth,
+  );
+
+  // Apply boundary constraints
+  const x = applyHorizontalBoundary(initialX, windowWidth, screenWidth);
+  const y = applyVerticalBoundary(
+    initialY,
+    windowHeight,
+    screenHeight,
+    trayBounds,
+  );
+
+  return { x, y };
 }
 
 export function createMainWindow(): BrowserWindow {
@@ -100,20 +183,36 @@ export function createMainWindow(): BrowserWindow {
 }
 
 export function createSettingsWindow(): BrowserWindow {
+  // Note: This function is deprecated and kept for backward compatibility
+  // Settings now open within the main window via hash navigation
   if (settingsWindow && !settingsWindow.isDestroyed()) {
     settingsWindow.show();
     settingsWindow.focus();
     return settingsWindow;
   }
 
+  const windowWidth = 600;
+  const windowHeight = 600;
+  const { x, y } = getWindowPositionNearTray(windowWidth, windowHeight);
+
   settingsWindow = new BrowserWindow({
-    width: 600,
-    height: 500,
-    minWidth: 500,
-    minHeight: 400,
+    width: windowWidth,
+    height: windowHeight,
+    x,
+    y,
+    minWidth: 550,
+    minHeight: 500,
     show: false,
+    frame: false,
+    transparent: true,
+    resizable: false,
+    movable: false,
+    alwaysOnTop: true,
     skipTaskbar: true,
     autoHideMenuBar: true,
+    hasShadow: false,
+    vibrancy: "popover",
+    visualEffectState: "active",
     title: "PR Reminder - Settings",
     webPreferences: {
       preload: join(__dirname, "../preload/index.mjs"),
@@ -123,8 +222,15 @@ export function createSettingsWindow(): BrowserWindow {
     },
   });
 
+  settingsWindow.setVisibleOnAllWorkspaces(true);
+
   settingsWindow.on("ready-to-show", () => {
     settingsWindow?.show();
+  });
+
+  // Hide window when it loses focus (like a popover)
+  settingsWindow.on("blur", () => {
+    settingsWindow?.hide();
   });
 
   settingsWindow.on("closed", () => {
