@@ -75,10 +75,15 @@ function buildContextMenu(): Electron.Menu {
   return Menu.buildFromTemplate([
     {
       label: "設定を開く",
-      click: () => {
+      click: async () => {
         const mainWindow = createMainWindow();
-        // Navigate to settings page within the main window
-        mainWindow.webContents.executeJavaScript(
+        // Wait for WebContents to be ready before navigating
+        if (mainWindow.webContents.isLoading()) {
+          await new Promise<void>((resolve) => {
+            mainWindow.webContents.once("did-finish-load", () => resolve());
+          });
+        }
+        await mainWindow.webContents.executeJavaScript(
           'window.location.hash = "#/settings"',
         );
       },

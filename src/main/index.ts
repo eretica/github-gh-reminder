@@ -23,10 +23,12 @@ autoUpdater.autoDownload = false; // Manually trigger download after user notifi
 // On macOS, hide from Dock and Cmd+Tab before the app is ready
 if (process.platform === "darwin" && app.dock) {
   // setActivationPolicy is the preferred method (hides from both Dock and Cmd+Tab)
-  const dock = app.dock as {
-    setActivationPolicy?: (policy: string) => void;
-    hide: () => void;
+  // Type assertion for Electron API that may not be in type definitions
+  type DockWithActivationPolicy = typeof app.dock & {
+    setActivationPolicy?(policy: "regular" | "accessory" | "prohibited"): void;
   };
+  const dock = app.dock as DockWithActivationPolicy;
+
   if (typeof dock.setActivationPolicy === "function") {
     try {
       dock.setActivationPolicy("accessory");
