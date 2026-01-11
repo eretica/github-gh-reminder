@@ -1,5 +1,5 @@
-import { PullRequestList } from "../components/PullRequestList";
-import { usePullRequests } from "../hooks/usePullRequests";
+import { PullRequestList } from "../features/pull-requests/components/PullRequestList";
+import { usePullRequests } from "../features/pull-requests/hooks/usePullRequests";
 
 function formatTime(date: Date): string {
   return date.toLocaleTimeString(undefined, {

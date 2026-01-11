@@ -1,10 +1,9 @@
 import { useState } from "react";
-import { RepositoryList } from "../components/RepositoryList";
-import { SettingsForm } from "../components/SettingsForm";
-import { Tabs } from "../components/Tabs";
-import { Toast } from "../components/Toast";
-import { useRepositories } from "../hooks/useRepositories";
-import { useSettings } from "../hooks/useSettings";
+import { Tabs, Toast } from "../components/ui";
+import { RepositoryList } from "../features/repositories/components/RepositoryList";
+import { useRepositories } from "../features/repositories/hooks/useRepositories";
+import { SettingsForm } from "../features/settings/components/SettingsForm";
+import { useSettings } from "../features/settings/hooks/useSettings";
 import { useToast } from "../hooks/useToast";
 
 const TABS = [

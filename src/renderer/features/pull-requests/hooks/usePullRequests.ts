@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import type { PullRequest, Repository } from "../../shared/types";
+import type { PullRequest, Repository } from "../../../../shared/types";
 
 interface UsePullRequestsReturn {
   pullRequests: PullRequest[];

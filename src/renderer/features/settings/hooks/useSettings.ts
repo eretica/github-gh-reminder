@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
-import type { Settings } from "../../shared/types";
-import { DEFAULT_SETTINGS } from "../../shared/types";
+import type { Settings } from "../../../../shared/types";
+import { DEFAULT_SETTINGS } from "../../../../shared/types";
 
 interface UseSettingsReturn {
   settings: Settings;

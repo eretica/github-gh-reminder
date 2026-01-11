@@ -13,8 +13,8 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { useState } from "react";
-import type { Repository } from "../../shared/types";
-import { ConfirmDialog } from "./ConfirmDialog";
+import type { Repository } from "../../../../shared/types";
+import { ConfirmDialog } from "../../../components/ui/ConfirmDialog";
 import { RepositoryItem } from "./RepositoryItem";
 
 interface RepositoryListProps {
