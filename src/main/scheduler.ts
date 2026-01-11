@@ -87,7 +87,8 @@ class PRScheduler {
     settings: Settings,
   ): Promise<PullRequest[]> {
     const db = getDatabase();
-    const ghPRs = fetchReviewRequestedPRs(repo.path);
+    const ghResult = await fetchReviewRequestedPRs(repo.path);
+    const ghPRs = ghResult.success ? ghResult.prs : [];
 
     const now = new Date().toISOString();
     const resultPRs: PullRequest[] = [];
@@ -288,16 +289,16 @@ class PRScheduler {
     const prsWithGHData: PullRequest[] = [];
     for (const [, items] of prsByRepo) {
       const repo = items[0].repo;
-      try {
-        const ghPRs = fetchReviewRequestedPRs(repo.path);
-        const ghPRMap = new Map(ghPRs.map((pr) => [pr.number, pr]));
+      const ghResult = await fetchReviewRequestedPRs(repo.path);
+
+      if (ghResult.success) {
+        const ghPRMap = new Map(ghResult.prs.map((pr) => [pr.number, pr]));
 
         for (const item of items) {
           const ghPR = ghPRMap.get(item.pr.prNumber);
           prsWithGHData.push(this.toFrontendPR(item.pr, repo.name, ghPR));
         }
-      } catch (error) {
-        console.error(`Failed to fetch GitHub data for ${repo.name}:`, error);
+      } else {
         // Fall back to DB data without extended fields
         for (const item of items) {
           prsWithGHData.push(this.toFrontendPR(item.pr, repo.name));

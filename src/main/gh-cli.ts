@@ -1,4 +1,22 @@
-import { execSync } from "node:child_process";
+import { execFile } from "node:child_process";
+import { promisify } from "node:util";
+
+const execFileAsync = promisify(execFile);
+
+/**
+ * gh コマンドをユーザーのシェル経由で実行するヘルパー関数
+ * ログインシェルとして実行することで、.zshrc/.zprofileなどで設定されたPATHを使用
+ */
+async function runGh(
+  args: string[],
+  cwd?: string,
+): Promise<{ stdout: string; stderr: string }> {
+  const ghCommand = `gh ${args.map((arg) => `'${arg.replace(/'/g, "'\\''")}'`).join(" ")}`;
+  return await execFileAsync("/bin/zsh", ["-l", "-c", ghCommand], {
+    cwd,
+    timeout: 30000,
+  });
+}
 
 export interface GHPullRequest {
   number: number;
@@ -20,68 +38,68 @@ export interface GHPullRequest {
   } | null;
 }
 
-export function fetchReviewRequestedPRs(repoPath: string): GHPullRequest[] {
+export interface GHCliResult {
+  success: boolean;
+  prs: GHPullRequest[];
+  logs: string[];
+  error?: string;
+}
+
+export async function fetchReviewRequestedPRs(
+  repoPath: string,
+): Promise<GHCliResult> {
+  const logs: string[] = [];
+
   try {
-    const command = `gh pr list --search "review-requested:@me" --limit 100 --json number,title,url,author,createdAt,isDraft,state,reviewDecision,reviewRequests,comments,changedFiles,mergeable,statusCheckRollup`;
-    const result = execSync(command, {
-      cwd: repoPath,
-      encoding: "utf-8",
-      timeout: 30000,
-    });
-    return JSON.parse(result);
+    const args = [
+      "pr",
+      "list",
+      "--search",
+      "review-requested:@me",
+      "--limit",
+      "100",
+      "--json",
+      "number,title,url,author,createdAt,isDraft,state,reviewDecision,reviewRequests,comments,changedFiles,mergeable,statusCheckRollup",
+    ];
+
+    const { stdout } = await runGh(args, repoPath);
+    const prs = JSON.parse(stdout) as GHPullRequest[];
+
+    return {
+      success: true,
+      prs,
+      logs,
+    };
   } catch (error) {
-    console.error(`Failed to fetch PRs for ${repoPath}:`, error);
-    return [];
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    logs.push(`[gh-cli] Error: ${errorMessage}`);
+
+    return {
+      success: false,
+      prs: [],
+      logs,
+      error: errorMessage,
+    };
   }
 }
 
-export function isGhInstalled(): boolean {
+export async function getRepoName(repoPath: string): Promise<string | null> {
   try {
-    execSync("gh --version", { encoding: "utf-8", timeout: 5000 });
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-export function isGhAuthenticated(): boolean {
-  try {
-    execSync("gh auth status", { encoding: "utf-8", timeout: 5000 });
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-export function getGhStatus(): { installed: boolean; authenticated: boolean } {
-  const installed = isGhInstalled();
-  const authenticated = installed ? isGhAuthenticated() : false;
-  return { installed, authenticated };
-}
-
-export function getRepoName(repoPath: string): string | null {
-  try {
-    const result = execSync(
-      "gh repo view --json nameWithOwner --jq .nameWithOwner",
-      {
-        cwd: repoPath,
-        encoding: "utf-8",
-        timeout: 10000,
-      },
+    const { stdout } = await runGh(
+      ["repo", "view", "--json", "nameWithOwner", "--jq", ".nameWithOwner"],
+      repoPath,
     );
-    return result.trim();
+    return stdout.trim();
   } catch {
     return null;
   }
 }
 
-export function isGitRepository(path: string): boolean {
+export async function isGitRepository(path: string): Promise<boolean> {
   try {
-    execSync("git rev-parse --git-dir", {
+    await execFileAsync("/bin/zsh", ["-l", "-c", "git rev-parse --git-dir"], {
       cwd: path,
-      encoding: "utf-8",
       timeout: 5000,
-      stdio: ["pipe", "pipe", "pipe"],
     });
     return true;
   } catch {

@@ -96,7 +96,7 @@ describe("PRScheduler", () => {
     mockDeleteWhere.mockResolvedValue(undefined);
 
     mockGetDatabase.mockReturnValue(mockDb);
-    mockFetchPRs.mockReturnValue([]);
+    mockFetchPRs.mockResolvedValue({ success: true, prs: [], logs: [] });
   });
 
   afterEach(() => {
@@ -260,7 +260,7 @@ describe("PRScheduler", () => {
         return Promise.resolve([]);
       });
 
-      mockFetchPRs.mockReturnValue([]);
+      mockFetchPRs.mockResolvedValue({ success: true, prs: [], logs: [] });
 
       await scheduler.checkAllRepositories(defaultSettings);
 
@@ -359,7 +359,7 @@ describe("PRScheduler", () => {
         return Promise.resolve([]); // Second: no existing PRs
       });
 
-      mockFetchPRs.mockReturnValue([ghPR]);
+      mockFetchPRs.mockResolvedValue({ success: true, prs: [ghPR], logs: [] });
 
       const mockInsertValues = vi.fn().mockResolvedValue(undefined);
       mockDb.insert.mockReturnValue({ values: mockInsertValues });
@@ -409,7 +409,7 @@ describe("PRScheduler", () => {
         return Promise.resolve([]);
       });
 
-      mockFetchPRs.mockReturnValue([ghPR]);
+      mockFetchPRs.mockResolvedValue({ success: true, prs: [ghPR], logs: [] });
 
       const mockInsertValues = vi.fn().mockResolvedValue(undefined);
       mockDb.insert.mockReturnValue({ values: mockInsertValues });
@@ -466,7 +466,11 @@ describe("PRScheduler", () => {
         return Promise.resolve([existingPR]);
       });
 
-      mockFetchPRs.mockReturnValue([updatedGhPR]);
+      mockFetchPRs.mockResolvedValue({
+        success: true,
+        prs: [updatedGhPR],
+        logs: [],
+      });
 
       const mockUpdateSet = vi.fn();
       const mockUpdateWhere = vi.fn().mockResolvedValue(undefined);
@@ -521,7 +525,7 @@ describe("PRScheduler", () => {
       });
 
       // No PRs returned from GitHub - means the PR was closed/merged
-      mockFetchPRs.mockReturnValue([]);
+      mockFetchPRs.mockResolvedValue({ success: true, prs: [], logs: [] });
 
       const mockDeleteWhere = vi.fn().mockResolvedValue(undefined);
       mockDb.delete.mockReturnValue({ where: mockDeleteWhere });

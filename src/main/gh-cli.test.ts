@@ -1,141 +1,24 @@
-import { execSync } from "node:child_process";
+import { execFile } from "node:child_process";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   fetchReviewRequestedPRs,
-  getGhStatus,
   getRepoName,
-  isGhAuthenticated,
-  isGhInstalled,
   isGitRepository,
 } from "./gh-cli";
 
 vi.mock("node:child_process", () => ({
-  execSync: vi.fn(),
+  execFile: vi.fn(),
 }));
 
-const mockExecSync = vi.mocked(execSync);
+const mockExecFile = vi.mocked(execFile);
 
 describe("gh-cli", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  describe("isGhInstalled", () => {
-    it("returns true when gh is installed", () => {
-      mockExecSync.mockReturnValueOnce("gh version 2.40.0");
-
-      expect(isGhInstalled()).toBe(true);
-      expect(mockExecSync).toHaveBeenCalledWith("gh --version", {
-        encoding: "utf-8",
-        timeout: 5000,
-      });
-    });
-
-    it("returns false when gh is not installed", () => {
-      mockExecSync.mockImplementationOnce(() => {
-        throw new Error("command not found: gh");
-      });
-
-      expect(isGhInstalled()).toBe(false);
-    });
-  });
-
-  describe("isGhAuthenticated", () => {
-    it("returns true when authenticated", () => {
-      mockExecSync.mockReturnValueOnce("Logged in to github.com");
-
-      expect(isGhAuthenticated()).toBe(true);
-      expect(mockExecSync).toHaveBeenCalledWith("gh auth status", {
-        encoding: "utf-8",
-        timeout: 5000,
-      });
-    });
-
-    it("returns false when not authenticated", () => {
-      mockExecSync.mockImplementationOnce(() => {
-        throw new Error("You are not logged into any GitHub hosts");
-      });
-
-      expect(isGhAuthenticated()).toBe(false);
-    });
-  });
-
-  describe("getGhStatus", () => {
-    it("returns installed: true, authenticated: true when both are true", () => {
-      mockExecSync
-        .mockReturnValueOnce("gh version 2.40.0")
-        .mockReturnValueOnce("Logged in to github.com");
-
-      expect(getGhStatus()).toEqual({ installed: true, authenticated: true });
-    });
-
-    it("returns installed: true, authenticated: false when only installed", () => {
-      mockExecSync
-        .mockReturnValueOnce("gh version 2.40.0")
-        .mockImplementationOnce(() => {
-          throw new Error("Not authenticated");
-        });
-
-      expect(getGhStatus()).toEqual({ installed: true, authenticated: false });
-    });
-
-    it("returns installed: false, authenticated: false when not installed", () => {
-      mockExecSync.mockImplementationOnce(() => {
-        throw new Error("command not found");
-      });
-
-      expect(getGhStatus()).toEqual({ installed: false, authenticated: false });
-    });
-  });
-
-  describe("getRepoName", () => {
-    it("returns repo name when successful", () => {
-      mockExecSync.mockReturnValueOnce("owner/repo-name\n");
-
-      expect(getRepoName("/path/to/repo")).toBe("owner/repo-name");
-      expect(mockExecSync).toHaveBeenCalledWith(
-        "gh repo view --json nameWithOwner --jq .nameWithOwner",
-        {
-          cwd: "/path/to/repo",
-          encoding: "utf-8",
-          timeout: 10000,
-        },
-      );
-    });
-
-    it("returns null when command fails", () => {
-      mockExecSync.mockImplementationOnce(() => {
-        throw new Error("not a repository");
-      });
-
-      expect(getRepoName("/path/to/not-a-repo")).toBe(null);
-    });
-  });
-
-  describe("isGitRepository", () => {
-    it("returns true for a git repository", () => {
-      mockExecSync.mockReturnValueOnce(".git");
-
-      expect(isGitRepository("/path/to/repo")).toBe(true);
-      expect(mockExecSync).toHaveBeenCalledWith("git rev-parse --git-dir", {
-        cwd: "/path/to/repo",
-        encoding: "utf-8",
-        timeout: 5000,
-        stdio: ["pipe", "pipe", "pipe"],
-      });
-    });
-
-    it("returns false for a non-git directory", () => {
-      mockExecSync.mockImplementationOnce(() => {
-        throw new Error("fatal: not a git repository");
-      });
-
-      expect(isGitRepository("/path/to/not-a-repo")).toBe(false);
-    });
-  });
-
   describe("fetchReviewRequestedPRs", () => {
-    it("returns PRs when successful", () => {
+    it("returns PRs when successful", async () => {
       const mockPRs = [
         {
           number: 123,
@@ -143,38 +26,64 @@ describe("gh-cli", () => {
           url: "https://github.com/owner/repo/pull/123",
           author: { login: "testuser" },
           createdAt: "2024-01-01T00:00:00Z",
+          isDraft: false,
+          state: "OPEN",
+          reviewDecision: null,
+          reviewRequests: [],
+          comments: [],
+          changedFiles: 5,
+          mergeable: "MERGEABLE",
+          statusCheckRollup: { state: "SUCCESS" },
         },
       ];
-      mockExecSync.mockReturnValueOnce(JSON.stringify(mockPRs));
 
-      const result = fetchReviewRequestedPRs("/path/to/repo");
-
-      expect(result).toEqual(mockPRs);
-      expect(mockExecSync).toHaveBeenCalledWith(
-        'gh pr list --search "review-requested:@me" --limit 100 --json number,title,url,author,createdAt,isDraft,state,reviewDecision,reviewRequests,comments,changedFiles,mergeable,statusCheckRollup',
-        {
-          cwd: "/path/to/repo",
-          encoding: "utf-8",
-          timeout: 30000,
+      (mockExecFile as any).mockImplementation(
+        (_file: string, _args: string[], _options: any, callback: any) => {
+          callback(null, { stdout: JSON.stringify(mockPRs), stderr: "" });
+          return {} as ReturnType<typeof execFile>;
         },
       );
+
+      const result = await fetchReviewRequestedPRs("/path/to/repo");
+
+      expect(result.success).toBe(true);
+      expect(result.prs).toEqual(mockPRs);
+      expect(result.error).toBeUndefined();
     });
 
-    it("returns empty array when no PRs found", () => {
-      mockExecSync.mockReturnValueOnce("[]");
+    it("returns empty array when no PRs found", async () => {
+      (mockExecFile as any).mockImplementation(
+        (_file: string, _args: string[], _options: any, callback: any) => {
+          callback(null, { stdout: "[]", stderr: "" });
+          return {} as ReturnType<typeof execFile>;
+        },
+      );
 
-      expect(fetchReviewRequestedPRs("/path/to/repo")).toEqual([]);
+      const result = await fetchReviewRequestedPRs("/path/to/repo");
+
+      expect(result.success).toBe(true);
+      expect(result.prs).toEqual([]);
     });
 
-    it("returns empty array on error", () => {
-      mockExecSync.mockImplementationOnce(() => {
-        throw new Error("Network error");
-      });
+    it("returns error result on failure", async () => {
+      (mockExecFile as any).mockImplementation(
+        (_file: string, _args: string[], _options: any, callback: any) => {
+          callback(new Error("gh: command not found"), {
+            stdout: "",
+            stderr: "",
+          });
+          return {} as ReturnType<typeof execFile>;
+        },
+      );
 
-      expect(fetchReviewRequestedPRs("/path/to/repo")).toEqual([]);
+      const result = await fetchReviewRequestedPRs("/path/to/repo");
+
+      expect(result.success).toBe(false);
+      expect(result.prs).toEqual([]);
+      expect(result.error).toContain("gh: command not found");
     });
 
-    it("returns multiple PRs correctly", () => {
+    it("returns multiple PRs correctly", async () => {
       const mockPRs = [
         {
           number: 1,
@@ -182,6 +91,14 @@ describe("gh-cli", () => {
           url: "https://github.com/owner/repo/pull/1",
           author: { login: "user1" },
           createdAt: "2024-01-01T00:00:00Z",
+          isDraft: false,
+          state: "OPEN",
+          reviewDecision: "APPROVED",
+          reviewRequests: [],
+          comments: [{ id: "1" }],
+          changedFiles: 3,
+          mergeable: "MERGEABLE",
+          statusCheckRollup: { state: "SUCCESS" },
         },
         {
           number: 2,
@@ -189,11 +106,100 @@ describe("gh-cli", () => {
           url: "https://github.com/owner/repo/pull/2",
           author: { login: "user2" },
           createdAt: "2024-01-02T00:00:00Z",
+          isDraft: true,
+          state: "OPEN",
+          reviewDecision: null,
+          reviewRequests: [{ __typename: "User", login: "reviewer" }],
+          comments: [],
+          changedFiles: 10,
+          mergeable: "CONFLICTING",
+          statusCheckRollup: { state: "PENDING" },
         },
       ];
-      mockExecSync.mockReturnValueOnce(JSON.stringify(mockPRs));
 
-      expect(fetchReviewRequestedPRs("/path/to/repo")).toEqual(mockPRs);
+      (mockExecFile as any).mockImplementation(
+        (_file: string, _args: string[], _options: any, callback: any) => {
+          callback(null, { stdout: JSON.stringify(mockPRs), stderr: "" });
+          return {} as ReturnType<typeof execFile>;
+        },
+      );
+
+      const result = await fetchReviewRequestedPRs("/path/to/repo");
+
+      expect(result.success).toBe(true);
+      expect(result.prs).toEqual(mockPRs);
+    });
+  });
+
+  describe("getRepoName", () => {
+    it("returns repo name when successful", async () => {
+      (mockExecFile as any).mockImplementation(
+        (_file: string, _args: string[], _options: any, callback: any) => {
+          callback(null, { stdout: "owner/repo-name\n", stderr: "" });
+          return {} as ReturnType<typeof execFile>;
+        },
+      );
+
+      const result = await getRepoName("/path/to/repo");
+
+      expect(result).toBe("owner/repo-name");
+    });
+
+    it("returns null when command fails", async () => {
+      (mockExecFile as any).mockImplementation(
+        (_file: string, _args: string[], _options: any, callback: any) => {
+          callback(new Error("not a repository"), { stdout: "", stderr: "" });
+          return {} as ReturnType<typeof execFile>;
+        },
+      );
+
+      const result = await getRepoName("/path/to/not-a-repo");
+
+      expect(result).toBe(null);
+    });
+
+    it("trims whitespace from output", async () => {
+      (mockExecFile as any).mockImplementation(
+        (_file: string, _args: string[], _options: any, callback: any) => {
+          callback(null, { stdout: "  owner/repo  \n", stderr: "" });
+          return {} as ReturnType<typeof execFile>;
+        },
+      );
+
+      const result = await getRepoName("/path/to/repo");
+
+      expect(result).toBe("owner/repo");
+    });
+  });
+
+  describe("isGitRepository", () => {
+    it("returns true for a git repository", async () => {
+      (mockExecFile as any).mockImplementation(
+        (_file: string, _args: string[], _options: any, callback: any) => {
+          callback(null, { stdout: ".git\n", stderr: "" });
+          return {} as ReturnType<typeof execFile>;
+        },
+      );
+
+      const result = await isGitRepository("/path/to/repo");
+
+      expect(result).toBe(true);
+    });
+
+    it("returns false for a non-git directory", async () => {
+      (mockExecFile as any).mockImplementation(
+        (_file: string, _args: string[], _options: any, callback: any) => {
+          callback(new Error("fatal: not a git repository"), {
+            stdout: "",
+            stderr: "",
+          });
+          return {} as ReturnType<typeof execFile>;
+        },
+      );
+
+      const result = await isGitRepository("/path/to/not-a-repo");
+
+      expect(result).toBe(false);
     });
   });
 });
