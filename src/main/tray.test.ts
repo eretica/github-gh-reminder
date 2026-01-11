@@ -274,7 +274,7 @@ describe("tray", () => {
     });
 
     it("context menu is shown on right-click", () => {
-      const tray = createTray(mockDeps);
+      createTray(mockDeps);
 
       // Simulate right-click event
       const rightClickHandler = mockDeps.mockTray.on.mock.calls.find(

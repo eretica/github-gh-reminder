@@ -5,10 +5,7 @@ import pkg from "electron-updater";
 const { autoUpdater } = pkg;
 
 import type { PullRequest } from "../shared/types";
-import {
-  createMainWindow,
-  setTrayBounds,
-} from "./windows";
+import { createMainWindow, setTrayBounds } from "./windows";
 
 // Dependencies interface for DI
 export interface TrayDeps {
@@ -81,7 +78,9 @@ function buildContextMenu(): Electron.Menu {
       click: () => {
         const mainWindow = createMainWindow();
         // Navigate to settings page within the main window
-        mainWindow.webContents.executeJavaScript('window.location.hash = "#/settings"');
+        mainWindow.webContents.executeJavaScript(
+          'window.location.hash = "#/settings"',
+        );
       },
     },
     {

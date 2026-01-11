@@ -23,9 +23,13 @@ autoUpdater.autoDownload = false; // Manually trigger download after user notifi
 // On macOS, hide from Dock and Cmd+Tab before the app is ready
 if (process.platform === "darwin" && app.dock) {
   // setActivationPolicy is the preferred method (hides from both Dock and Cmd+Tab)
-  if (typeof app.dock.setActivationPolicy === 'function') {
+  const dock = app.dock as {
+    setActivationPolicy?: (policy: string) => void;
+    hide: () => void;
+  };
+  if (typeof dock.setActivationPolicy === "function") {
     try {
-      app.dock.setActivationPolicy("accessory");
+      dock.setActivationPolicy("accessory");
       log.info("Set activation policy to 'accessory'");
     } catch (error) {
       log.error("Failed to set activation policy:", error);

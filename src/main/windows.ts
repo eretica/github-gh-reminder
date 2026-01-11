@@ -16,7 +16,8 @@ function getWindowPositionNearTray(
 ): { x: number; y: number } {
   if (trayBounds) {
     const primaryDisplay = screen.getPrimaryDisplay();
-    const { width: screenWidth, height: screenHeight } = primaryDisplay.workAreaSize;
+    const { width: screenWidth, height: screenHeight } =
+      primaryDisplay.workAreaSize;
 
     // Position window below tray icon, centered horizontally
     let x = Math.round(trayBounds.x + trayBounds.width / 2 - windowWidth / 2);
