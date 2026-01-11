@@ -471,7 +471,7 @@ describe("PRScheduler", () => {
 
     it("does not notify for new PRs when both notifyOnNew and notifyReviewRequestEnabled must be true", async () => {
       // Test notifyOnNew=true but notifyReviewRequestEnabled=false
-      const settings1 = {
+      const settingsWithNotifyDisabled = {
         ...defaultSettings,
         notifyOnNew: true,
         notifyReviewRequestEnabled: false,
@@ -514,7 +514,7 @@ describe("PRScheduler", () => {
       const mockInsertValues = vi.fn().mockResolvedValue(undefined);
       mockDb.insert.mockReturnValue({ values: mockInsertValues });
 
-      await scheduler.checkAllRepositories(settings1);
+      await scheduler.checkAllRepositories(settingsWithNotifyDisabled);
 
       expect(mockNotifyNewPR).not.toHaveBeenCalled();
     });

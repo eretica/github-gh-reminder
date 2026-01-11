@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 import type { BetterSQLite3Database } from "drizzle-orm/better-sqlite3";
-import type { Settings } from "../../../shared/types";
+import { DEFAULT_SETTINGS, type Settings } from "../../../shared/types";
 import * as schema from "../schema";
 
 export class SettingsRepository {
@@ -14,13 +14,22 @@ export class SettingsRepository {
     );
 
     return {
-      notifyOnNew: settingsMap.get("notifyOnNew") ?? true,
-      enableReminder: settingsMap.get("enableReminder") ?? true,
-      reminderIntervalHours: settingsMap.get("reminderIntervalHours") ?? 4,
-      checkIntervalMinutes: settingsMap.get("checkIntervalMinutes") ?? 5,
+      notifyOnNew:
+        settingsMap.get("notifyOnNew") ?? DEFAULT_SETTINGS.notifyOnNew,
+      enableReminder:
+        settingsMap.get("enableReminder") ?? DEFAULT_SETTINGS.enableReminder,
+      reminderIntervalHours:
+        settingsMap.get("reminderIntervalHours") ??
+        DEFAULT_SETTINGS.reminderIntervalHours,
+      checkIntervalMinutes:
+        settingsMap.get("checkIntervalMinutes") ??
+        DEFAULT_SETTINGS.checkIntervalMinutes,
       notifyReviewRequestEnabled:
-        settingsMap.get("notifyReviewRequestEnabled") ?? true,
-      notifyReminderEnabled: settingsMap.get("notifyReminderEnabled") ?? true,
+        settingsMap.get("notifyReviewRequestEnabled") ??
+        DEFAULT_SETTINGS.notifyReviewRequestEnabled,
+      notifyReminderEnabled:
+        settingsMap.get("notifyReminderEnabled") ??
+        DEFAULT_SETTINGS.notifyReminderEnabled,
     };
   }
 
