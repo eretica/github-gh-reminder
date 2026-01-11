@@ -1,5 +1,8 @@
+import { Toast } from "../components/ui";
 import { PullRequestList } from "../features/pull-requests/components/PullRequestList";
 import { usePullRequests } from "../features/pull-requests/hooks/usePullRequests";
+import { useSettings } from "../features/settings/hooks/useSettings";
+import { useToast } from "../hooks/useToast";
 
 function formatTime(date: Date): string {
   return date.toLocaleTimeString(undefined, {
@@ -19,6 +22,8 @@ export default function MainPage(): JSX.Element {
     openPullRequest,
     lastUpdated,
   } = usePullRequests();
+  const { settings } = useSettings();
+  const { toasts, showToast, hideToast } = useToast();
 
   const handleOpenSettings = (): void => {
     window.location.hash = "#/settings";
@@ -26,6 +31,24 @@ export default function MainPage(): JSX.Element {
 
   const handleQuit = (): void => {
     window.api.quitApp();
+  };
+
+  const handleRefresh = async (): Promise<void> => {
+    try {
+      await refresh();
+      if (settings.showRefreshToast) {
+        showToast("Pull requests refreshed successfully", "success");
+      }
+    } catch (err) {
+      if (settings.showRefreshToast) {
+        showToast(
+          err instanceof Error
+            ? err.message
+            : "Failed to refresh pull requests",
+          "error",
+        );
+      }
+    }
   };
 
   return (
@@ -117,7 +140,7 @@ export default function MainPage(): JSX.Element {
           {lastUpdated ? `Last updated: ${formatTime(lastUpdated)}` : ""}
         </span>
         <button
-          onClick={refresh}
+          onClick={handleRefresh}
           disabled={loading}
           className={`inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium rounded-md transition-all duration-200 ${
             loading
@@ -141,6 +164,15 @@ export default function MainPage(): JSX.Element {
           Refresh
         </button>
       </footer>
+
+      {toasts.map((toast) => (
+        <Toast
+          key={toast.id}
+          message={toast.message}
+          type={toast.type}
+          onClose={() => hideToast(toast.id)}
+        />
+      ))}
     </div>
   );
 }
