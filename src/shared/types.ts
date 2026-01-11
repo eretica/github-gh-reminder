@@ -38,6 +38,7 @@ export interface Settings {
   enableReminder: boolean;
   reminderIntervalHours: number;
   checkIntervalMinutes: number;
+  showRefreshToast: boolean;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -45,6 +46,7 @@ export const DEFAULT_SETTINGS: Settings = {
   enableReminder: true,
   reminderIntervalHours: 1,
   checkIntervalMinutes: 5,
+  showRefreshToast: true,
 };
 
 export interface IpcApi {

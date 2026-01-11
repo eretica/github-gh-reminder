@@ -1,5 +1,9 @@
 import { PullRequestList } from "../features/pull-requests/components/PullRequestList";
 import { usePullRequests } from "../features/pull-requests/hooks/usePullRequests";
+import { useSettings } from "../features/settings/hooks/useSettings";
+import { Toast } from "../components/ui/Toast";
+import type { ToastType } from "../components/ui/Toast";
+import { useState } from "react";
 
 function formatTime(date: Date): string {
   return date.toLocaleTimeString(undefined, {
@@ -20,12 +24,37 @@ export default function MainPage(): JSX.Element {
     lastUpdated,
   } = usePullRequests();
 
+  const { settings } = useSettings();
+  const [toast, setToast] = useState<{
+    message: string;
+    type: ToastType;
+  } | null>(null);
+
   const handleOpenSettings = (): void => {
     window.location.hash = "#/settings";
   };
 
   const handleQuit = (): void => {
     window.api.quitApp();
+  };
+
+  const handleRefresh = async (): Promise<void> => {
+    try {
+      await refresh();
+      if (settings.showRefreshToast) {
+        setToast({
+          message: "Pull requests refreshed successfully",
+          type: "success",
+        });
+      }
+    } catch (err) {
+      if (settings.showRefreshToast) {
+        setToast({
+          message: err instanceof Error ? err.message : "Failed to refresh",
+          type: "error",
+        });
+      }
+    }
   };
 
   return (
@@ -117,7 +146,7 @@ export default function MainPage(): JSX.Element {
           {lastUpdated ? `Last updated: ${formatTime(lastUpdated)}` : ""}
         </span>
         <button
-          onClick={refresh}
+          onClick={handleRefresh}
           disabled={loading}
           className={`inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium rounded-md transition-all duration-200 ${
             loading
@@ -141,6 +170,15 @@ export default function MainPage(): JSX.Element {
           Refresh
         </button>
       </footer>
+
+      {/* Toast notification */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
     </div>
   );
 }
