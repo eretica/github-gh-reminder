@@ -1,10 +1,6 @@
-# GitHub PR Reminder
-
 [日本語README.md](README.ja.md)
 
-<p align="center">
-  <img src="build/icon.png" alt="GitHub PR Reminder" width="128" height="128">
-</p>
+# GitHub PR Reminder
 
 A system tray application that monitors GitHub Pull Request review requests and sends desktop notifications.
 Uses GitHub CLI (gh) authentication, so no app-specific authentication setup is required.
