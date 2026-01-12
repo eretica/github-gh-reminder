@@ -19,15 +19,7 @@ log.info("App starting...");
 // Configure auto-updater
 autoUpdater.logger = log;
 autoUpdater.autoDownload = false; // Manually trigger download after user notification
-
-// Set explicit feed URL for GitHub releases
-if (app.isPackaged) {
-  autoUpdater.setFeedURL({
-    provider: "github",
-    owner: "eretica",
-    repo: "github_gh_reminder",
-  });
-}
+// Note: setFeedURL is not needed for GitHub provider - app-update.yml handles this automatically
 
 // On macOS, hide from Dock and Cmd+Tab before the app is ready
 if (process.platform === "darwin" && app.dock) {
