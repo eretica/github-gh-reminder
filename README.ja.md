@@ -1,9 +1,5 @@
 # GitHub PR Reminder
 
-<p align="center">
-  <img src="build/icon.png" alt="GitHub PR Reminder" width="128" height="128">
-</p>
-
 GitHub Pull Requestsのレビュー依頼を監視し、デスクトップ通知するトレイアプリケーション。
 GitHub CLI（gh）の認証を利用するため、アプリ独自の認証設定は不要です。
 
