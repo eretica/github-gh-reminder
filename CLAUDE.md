@@ -100,8 +100,8 @@ src/
 - **目的**: タスク実行時の対話的ガイド
 - **呼び出し**: `/adding-features`等のコマンドで明示的に呼び出し
 - **用途**: 「特定のタスクを実行する時に参照するステップバイステップガイド」
-- **例**: `adding-features.skill`, `common-tasks.skill`, `debugging-ipc.skill`
-- **形式**: ディレクトリ（`.skill/`）、内部に`SKILL.md`
+- **例**: `adding-features`, `common-tasks`, `debugging-ipc`
+- **形式**: ディレクトリ（`/`）、内部に`SKILL.md`
 
 ### 利用可能なSkills
 

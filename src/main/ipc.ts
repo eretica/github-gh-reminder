@@ -41,7 +41,8 @@ export function setupIpcHandlers(): void {
       const path = result.filePaths[0];
 
       // Verify it's a git repository
-      if (!isGitRepository(path)) {
+      const isGitRepo = await isGitRepository(path);
+      if (!isGitRepo) {
         throw new Error("Selected folder is not a Git repository");
       }
 
@@ -55,7 +56,7 @@ export function setupIpcHandlers(): void {
       }
 
       // Get repo name from gh cli or use folder name
-      const repoName = getRepoName(path) || basename(path);
+      const repoName = (await getRepoName(path)) || basename(path);
 
       // Get max order
       const maxOrder = await repositoryRepo.getMaxOrder();
