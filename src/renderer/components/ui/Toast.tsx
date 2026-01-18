@@ -78,7 +78,7 @@ export function Toast({
 
   return (
     <div
-      className={`fixed bottom-4 right-4 flex items-center gap-3 px-4 py-3 rounded-lg border-l-4 shadow-lg animate-slideIn ${bgColor}`}
+      className={`fixed top-4 right-4 flex items-center gap-3 px-4 py-3 rounded-lg border-l-4 shadow-lg animate-slideIn ${bgColor}`}
       style={{
         animation: "slideIn 0.3s ease-out",
         zIndex: 9999,
