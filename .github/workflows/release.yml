@@ -25,44 +25,48 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Generate release notes
+        id: release_notes
+        run: |
+          # 前回のタグを取得
+          PREVIOUS_TAG=$(git tag --sort=-version:refname | grep -v "^${{ github.ref_name }}$" | head -1)
+          echo "Previous tag: $PREVIOUS_TAG"
+          echo "Current tag: ${{ github.ref_name }}"
+
+          # コミットログからリリースノートを生成
+          {
+            echo "## 変更内容"
+            echo ""
+            if [ -n "$PREVIOUS_TAG" ]; then
+              git log ${PREVIOUS_TAG}..${{ github.ref_name }} --oneline --no-merges | while read line; do
+                COMMIT_MSG=$(echo "$line" | sed 's/^[a-f0-9]* //')
+                echo "* $COMMIT_MSG"
+              done
+              echo ""
+              echo "**Full Changelog**: https://github.com/${{ github.repository }}/compare/${PREVIOUS_TAG}...${{ github.ref_name }}"
+            else
+              echo "初回リリース"
+            fi
+          } > release-notes.md
+
+          cat release-notes.md
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create GitHub Release
+        run: |
+          gh release create ${{ github.ref_name }} \
+            --draft \
+            --title "${{ github.ref_name }}" \
+            --notes-file release-notes.md
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Build application
         run: pnpm build
 
-      - name: Build and publish releases
+      - name: Build and upload assets
         run: pnpm exec electron-builder --mac --publish always
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # コード署名を無効化（auto-updates は動作しません）
           CSC_IDENTITY_AUTO_DISCOVERY: false
-
-      - name: Update release notes
-        run: |
-          # electron-builder がリリースを作成するのを待つ
-          echo "Waiting for release to be created..."
-          sleep 10
-
-          # リリースが存在するか確認（最大30秒待機）
-          for i in {1..6}; do
-            if gh api repos/${{ github.repository }}/releases/tags/${{ github.ref_name }} &>/dev/null; then
-              echo "Release found!"
-              break
-            fi
-            echo "Waiting for release... ($i/6)"
-            sleep 5
-          done
-
-          # リリースIDを取得
-          RELEASE_ID=$(gh api repos/${{ github.repository }}/releases/tags/${{ github.ref_name }} --jq .id)
-
-          # 自動リリースノートを生成
-          NOTES=$(gh api repos/${{ github.repository }}/releases/generate-notes \
-            -f tag_name=${{ github.ref_name }} \
-            --jq .body)
-
-          # リリースノートを更新
-          gh api -X PATCH repos/${{ github.repository }}/releases/$RELEASE_ID \
-            -f body="$NOTES"
-
-          echo "Release notes updated successfully!"
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
