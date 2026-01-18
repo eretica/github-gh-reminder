@@ -25,12 +25,11 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Build and Release (Unsigned)
-        uses: samuelmeuli/action-electron-builder@v1
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          release: true
-          skip_build: false
+      - name: Build application
+        run: pnpm build
+
+      - name: Build and publish releases
+        run: pnpm exec electron-builder --mac --publish always
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # コード署名を無効化（auto-updates は動作しません）
