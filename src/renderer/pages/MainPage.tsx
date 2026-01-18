@@ -1,6 +1,6 @@
+import { Toast } from "../components/ui";
 import { PullRequestList } from "../features/pull-requests/components/PullRequestList";
 import { usePullRequests } from "../features/pull-requests/hooks/usePullRequests";
-import { Toast } from "../components/ui";
 import { useToast } from "../hooks/useToast";
 
 function formatTime(date: Date): string {
