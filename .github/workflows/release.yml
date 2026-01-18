@@ -34,3 +34,9 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # コード署名を無効化（auto-updates は動作しません）
           CSC_IDENTITY_AUTO_DISCOVERY: false
+
+      - name: Update release notes
+        run: |
+          gh release edit ${{ github.ref_name }} --generate-notes
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
