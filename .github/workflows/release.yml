@@ -37,6 +37,20 @@ jobs:
 
       - name: Update release notes
         run: |
+          # electron-builder がリリースを作成するのを待つ
+          echo "Waiting for release to be created..."
+          sleep 10
+
+          # リリースが存在するか確認（最大30秒待機）
+          for i in {1..6}; do
+            if gh api repos/${{ github.repository }}/releases/tags/${{ github.ref_name }} &>/dev/null; then
+              echo "Release found!"
+              break
+            fi
+            echo "Waiting for release... ($i/6)"
+            sleep 5
+          done
+
           # リリースIDを取得
           RELEASE_ID=$(gh api repos/${{ github.repository }}/releases/tags/${{ github.ref_name }} --jq .id)
 
@@ -48,5 +62,7 @@ jobs:
           # リリースノートを更新
           gh api -X PATCH repos/${{ github.repository }}/releases/$RELEASE_ID \
             -f body="$NOTES"
+
+          echo "Release notes updated successfully!"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
