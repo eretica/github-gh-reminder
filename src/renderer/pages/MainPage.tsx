@@ -1,5 +1,7 @@
 import { PullRequestList } from "../features/pull-requests/components/PullRequestList";
 import { usePullRequests } from "../features/pull-requests/hooks/usePullRequests";
+import { Toast } from "../components/ui";
+import { useToast } from "../hooks/useToast";
 
 function formatTime(date: Date): string {
   return date.toLocaleTimeString(undefined, {
@@ -19,6 +21,13 @@ export default function MainPage(): JSX.Element {
     openPullRequest,
     lastUpdated,
   } = usePullRequests();
+
+  const { toasts, showToast, hideToast } = useToast();
+
+  const handleRefresh = async (): Promise<void> => {
+    await refresh();
+    showToast("Refreshed successfully", "success");
+  };
 
   const handleOpenSettings = (): void => {
     window.location.hash = "#/settings";
@@ -117,7 +126,7 @@ export default function MainPage(): JSX.Element {
           {lastUpdated ? `Last updated: ${formatTime(lastUpdated)}` : ""}
         </span>
         <button
-          onClick={refresh}
+          onClick={handleRefresh}
           disabled={loading}
           className={`inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium rounded-md transition-all duration-200 ${
             loading
@@ -141,6 +150,16 @@ export default function MainPage(): JSX.Element {
           Refresh
         </button>
       </footer>
+
+      {/* Toasts */}
+      {toasts.map((toast) => (
+        <Toast
+          key={toast.id}
+          message={toast.message}
+          type={toast.type}
+          onClose={() => hideToast(toast.id)}
+        />
+      ))}
     </div>
   );
 }
