@@ -40,7 +40,7 @@ export function usePullRequests(): UsePullRequestsReturn {
       ]);
 
       // Detect new PRs
-      const currentIds = new Set(prs.map(pr => pr.id));
+      const currentIds = new Set(prs.map((pr) => pr.id));
       const newIds = new Set<string>();
       for (const id of currentIds) {
         if (!prevPRIds.has(id)) {
@@ -72,7 +72,7 @@ export function usePullRequests(): UsePullRequestsReturn {
         ]);
 
         // Initial load: no animation
-        const currentIds = new Set(prs.map(pr => pr.id));
+        const currentIds = new Set(prs.map((pr) => pr.id));
         setPullRequests(prs);
         setNewPRIds(new Set());
         setPrevPRIds(currentIds);
@@ -91,7 +91,7 @@ export function usePullRequests(): UsePullRequestsReturn {
     // Subscribe to updates
     const unsubscribe = window.api.onPullRequestsUpdated((prs) => {
       // Detect new PRs
-      const currentIds = new Set(prs.map(pr => pr.id));
+      const currentIds = new Set(prs.map((pr) => pr.id));
       const newIds = new Set<string>();
       for (const id of currentIds) {
         if (!prevPRIds.has(id)) {
@@ -107,7 +107,7 @@ export function usePullRequests(): UsePullRequestsReturn {
     });
 
     return unsubscribe;
-  }, [loadRepositories]);
+  }, [loadRepositories, prevPRIds]);
 
   const openPullRequest = useCallback(async (url: string) => {
     try {

@@ -110,7 +110,11 @@ export function PullRequestList({
                   <div
                     key={pr.id}
                     className={newPRIds.has(pr.id) ? "animate-slideIn" : ""}
-                    style={newPRIds.has(pr.id) ? { animationDelay: `${index * 50}ms` } : {}}
+                    style={
+                      newPRIds.has(pr.id)
+                        ? { animationDelay: `${index * 50}ms` }
+                        : {}
+                    }
                   >
                     <PullRequestItem pullRequest={pr} onOpen={onOpenPR} />
                   </div>
