@@ -182,6 +182,7 @@ class PRScheduler {
       .where(
         and(
           eq(schema.repositories.enabled, 1),
+          eq(schema.pullRequests.reminderEnabled, 1),
           lt(
             schema.pullRequests.lastRemindedAt,
             reminderThreshold.toISOString(),
@@ -200,7 +201,12 @@ class PRScheduler {
         schema.repositories,
         eq(schema.pullRequests.repositoryId, schema.repositories.id),
       )
-      .where(and(eq(schema.repositories.enabled, 1)));
+      .where(
+        and(
+          eq(schema.repositories.enabled, 1),
+          eq(schema.pullRequests.reminderEnabled, 1),
+        ),
+      );
 
     const allPRsToRemind = [
       ...prsToRemind,
@@ -248,6 +254,7 @@ class PRScheduler {
       firstSeenAt: pr.firstSeenAt,
       notifiedAt: pr.notifiedAt,
       lastRemindedAt: pr.lastRemindedAt,
+      reminderEnabled: pr.reminderEnabled === 1,
       // Extended PR details from GitHub
       isDraft: ghPR?.isDraft,
       state: ghPR?.state,

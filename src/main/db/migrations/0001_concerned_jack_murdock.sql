@@ -1,0 +1,1 @@
+ALTER TABLE `pull_requests` ADD `reminder_enabled` integer DEFAULT 1 NOT NULL;

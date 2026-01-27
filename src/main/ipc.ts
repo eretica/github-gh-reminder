@@ -12,7 +12,11 @@ import {
   type Settings,
 } from "../shared/types";
 import { getDatabase } from "./db";
-import { RepositoryRepository, SettingsRepository } from "./db/repositories";
+import {
+  PullRequestRepository,
+  RepositoryRepository,
+  SettingsRepository,
+} from "./db/repositories";
 import { getRepoName, isGitRepository } from "./gh-cli";
 import { scheduler } from "./scheduler";
 import { updateTrayMenu } from "./tray";
@@ -152,6 +156,19 @@ export function setupIpcHandlers(): void {
     IPC_CHANNELS.PR_OPEN,
     async (_, url: string): Promise<void> => {
       await shell.openExternal(url);
+    },
+  );
+
+  ipcMain.handle(
+    IPC_CHANNELS.PR_TOGGLE_REMINDER,
+    async (_, prId: string, enabled: boolean): Promise<void> => {
+      const db = getDatabase();
+      const pullRequestRepo = new PullRequestRepository(db);
+      await pullRequestRepo.update(prId, { reminderEnabled: enabled });
+
+      // Update UI
+      const prs = await scheduler.getAllPRs();
+      sendPRUpdate(prs);
     },
   );
 

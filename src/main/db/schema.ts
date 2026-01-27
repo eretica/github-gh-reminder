@@ -28,6 +28,7 @@ export const pullRequests = sqliteTable("pull_requests", {
   firstSeenAt: text("first_seen_at").notNull(),
   notifiedAt: text("notified_at"),
   lastRemindedAt: text("last_reminded_at"),
+  reminderEnabled: integer("reminder_enabled").notNull().default(1),
 });
 
 export const notificationHistory = sqliteTable("notification_history", {
