@@ -42,12 +42,8 @@
           "name": "notification_history_pr_id_pull_requests_id_fk",
           "tableFrom": "notification_history",
           "tableTo": "pull_requests",
-          "columnsFrom": [
-            "pr_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["pr_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -143,12 +139,8 @@
           "name": "pull_requests_repository_id_repositories_id_fk",
           "tableFrom": "pull_requests",
           "tableTo": "repositories",
-          "columnsFrom": [
-            "repository_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["repository_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }

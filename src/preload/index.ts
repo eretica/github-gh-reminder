@@ -33,6 +33,8 @@ const api: IpcApi = {
     ipcRenderer.invoke(IPC_CHANNELS.PR_REFRESH),
   openPullRequest: (url: string): Promise<void> =>
     ipcRenderer.invoke(IPC_CHANNELS.PR_OPEN, url),
+  togglePRReminder: (prId: string, enabled: boolean): Promise<void> =>
+    ipcRenderer.invoke(IPC_CHANNELS.PR_TOGGLE_REMINDER, prId, enabled),
 
   // Windows
   openSettings: (): Promise<void> =>

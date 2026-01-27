@@ -184,7 +184,7 @@ export function PullRequestItem({
             e.stopPropagation();
             void window.api.togglePRReminder(
               pullRequest.id,
-              pullRequest.reminderEnabled === false
+              pullRequest.reminderEnabled === false,
             );
           }}
         >
