@@ -5,12 +5,14 @@ interface PullRequestListProps {
   pullRequests: PullRequest[];
   repositories: Repository[];
   onOpenPR: (url: string) => void;
+  newPRIds?: Set<string>;
 }
 
 export function PullRequestList({
   pullRequests,
   repositories,
   onOpenPR,
+  newPRIds = new Set(),
 }: PullRequestListProps): JSX.Element {
   // Group PRs by repository name
   const prsByRepo = pullRequests.reduce(
@@ -107,8 +109,8 @@ export function PullRequestList({
                 repoPRs.map((pr, index) => (
                   <div
                     key={pr.id}
-                    className="animate-slideIn"
-                    style={{ animationDelay: `${index * 50}ms` }}
+                    className={newPRIds.has(pr.id) ? "animate-slideIn" : ""}
+                    style={newPRIds.has(pr.id) ? { animationDelay: `${index * 50}ms` } : {}}
                   >
                     <PullRequestItem pullRequest={pr} onOpen={onOpenPR} />
                   </div>
