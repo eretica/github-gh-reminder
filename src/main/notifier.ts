@@ -1,5 +1,7 @@
 import { Notification, shell } from "electron";
-import type { PullRequest } from "../shared/types";
+import type { PullRequest, Settings } from "../shared/types";
+import { getDatabase } from "./db";
+import { SettingsRepository } from "./db/repositories";
 import { getTray } from "./tray";
 import { createMainWindow, setTrayBounds } from "./windows";
 
@@ -20,6 +22,7 @@ export interface NotifierDeps {
   getTray: () => { getBounds: () => Electron.Rectangle } | null;
   setTrayBounds: (bounds: Electron.Rectangle) => void;
   createMainWindow: () => void;
+  getSettings: () => Promise<Settings>;
 }
 
 // Default production dependencies
@@ -29,16 +32,22 @@ const defaultDeps: NotifierDeps = {
   getTray,
   setTrayBounds,
   createMainWindow,
+  getSettings: async () => {
+    const db = getDatabase();
+    const settingsRepo = new SettingsRepository(db);
+    return await settingsRepo.getAll();
+  },
 };
 
-export function notifyNewPR(
+export async function notifyNewPR(
   pr: PullRequest,
   deps: NotifierDeps = defaultDeps,
-): void {
+): Promise<void> {
+  const settings = await deps.getSettings();
   const notification = deps.createNotification({
     title: "New PR Review Request",
     body: `${pr.repositoryName}: #${pr.prNumber} ${pr.title}\nby @${pr.author}`,
-    silent: false,
+    silent: !settings.notificationSound,
   });
 
   notification.on("click", () => {
@@ -52,12 +61,13 @@ export function notifyNewPR(
   notification.show();
 }
 
-export function notifyReminder(
+export async function notifyReminder(
   prs: PullRequest[],
   deps: NotifierDeps = defaultDeps,
-): void {
+): Promise<void> {
   if (prs.length === 0) return;
 
+  const settings = await deps.getSettings();
   const count = prs.length;
   const body =
     count === 1
@@ -67,7 +77,7 @@ export function notifyReminder(
   const notification = deps.createNotification({
     title: "PR Review Reminder",
     body,
-    silent: false,
+    silent: !settings.notificationSound,
   });
 
   notification.on("click", () => {

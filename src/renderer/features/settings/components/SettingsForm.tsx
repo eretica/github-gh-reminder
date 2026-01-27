@@ -26,7 +26,8 @@ export function SettingsForm({
       formData.notifyOnNew !== settings.notifyOnNew ||
       formData.enableReminder !== settings.enableReminder ||
       formData.reminderIntervalHours !== settings.reminderIntervalHours ||
-      formData.checkIntervalMinutes !== settings.checkIntervalMinutes;
+      formData.checkIntervalMinutes !== settings.checkIntervalMinutes ||
+      formData.notificationSound !== settings.notificationSound;
 
     setHasChanges(changed);
   }, [formData, settings]);
@@ -92,6 +93,26 @@ export function SettingsForm({
             </span>
             <p className="text-xs text-gray-500 mt-0.5">
               Periodically remind about pending PR reviews
+            </p>
+          </div>
+        </label>
+
+        {/* Notification sound */}
+        <label className="flex items-start gap-3">
+          <input
+            type="checkbox"
+            checked={formData.notificationSound}
+            onChange={(e) =>
+              setFormData({ ...formData, notificationSound: e.target.checked })
+            }
+            className="mt-1 h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+          />
+          <div>
+            <span className="text-sm text-gray-900">
+              Enable notification sound
+            </span>
+            <p className="text-xs text-gray-500 mt-0.5">
+              Play a sound when notifications are shown
             </p>
           </div>
         </label>
