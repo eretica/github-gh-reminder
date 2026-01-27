@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { PullRequest, Repository } from "../../../../shared/types";
 
 interface UsePullRequestsReturn {
@@ -18,7 +18,7 @@ export function usePullRequests(): UsePullRequestsReturn {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
-  const [prevPRIds, setPrevPRIds] = useState<Set<string>>(new Set());
+  const prevPRIds = useRef<Set<string>>(new Set());
   const [newPRIds, setNewPRIds] = useState<Set<string>>(new Set());
 
   const loadRepositories = useCallback(async () => {
@@ -43,14 +43,14 @@ export function usePullRequests(): UsePullRequestsReturn {
       const currentIds = new Set(prs.map((pr) => pr.id));
       const newIds = new Set<string>();
       for (const id of currentIds) {
-        if (!prevPRIds.has(id)) {
+        if (!prevPRIds.current.has(id)) {
           newIds.add(id);
         }
       }
 
       setPullRequests(prs);
       setNewPRIds(newIds);
-      setPrevPRIds(currentIds);
+      prevPRIds.current = currentIds;
       setLastUpdated(new Date());
     } catch (err) {
       setError(
@@ -59,7 +59,7 @@ export function usePullRequests(): UsePullRequestsReturn {
     } finally {
       setLoading(false);
     }
-  }, [loadRepositories, prevPRIds]);
+  }, [loadRepositories]);
 
   useEffect(() => {
     // Initial load
@@ -75,7 +75,7 @@ export function usePullRequests(): UsePullRequestsReturn {
         const currentIds = new Set(prs.map((pr) => pr.id));
         setPullRequests(prs);
         setNewPRIds(new Set());
-        setPrevPRIds(currentIds);
+        prevPRIds.current = currentIds;
         setLastUpdated(new Date());
       } catch (err) {
         setError(
@@ -94,20 +94,20 @@ export function usePullRequests(): UsePullRequestsReturn {
       const currentIds = new Set(prs.map((pr) => pr.id));
       const newIds = new Set<string>();
       for (const id of currentIds) {
-        if (!prevPRIds.has(id)) {
+        if (!prevPRIds.current.has(id)) {
           newIds.add(id);
         }
       }
 
       setPullRequests(prs);
       setNewPRIds(newIds);
-      setPrevPRIds(currentIds);
+      prevPRIds.current = currentIds;
       setLastUpdated(new Date());
       loadRepositories();
     });
 
     return unsubscribe;
-  }, [loadRepositories, prevPRIds]);
+  }, [loadRepositories]);
 
   const openPullRequest = useCallback(async (url: string) => {
     try {
