@@ -15,6 +15,7 @@ import { getDatabase } from "./db";
 import { RepositoryRepository, SettingsRepository } from "./db/repositories";
 import { getRepoName, isGitRepository } from "./gh-cli";
 import { scheduler } from "./scheduler";
+import { getSystemSounds, playSound } from "./sound";
 import { updateTrayMenu } from "./tray";
 
 export function setupIpcHandlers(): void {
@@ -131,6 +132,18 @@ export function setupIpcHandlers(): void {
 
       // Restart scheduler with new settings
       scheduler.restart(newSettings);
+    },
+  );
+
+  // System Sound handlers
+  ipcMain.handle(IPC_CHANNELS.SOUND_LIST, async (): Promise<string[]> => {
+    return getSystemSounds();
+  });
+
+  ipcMain.handle(
+    IPC_CHANNELS.SOUND_PLAY,
+    async (_, soundName: string): Promise<void> => {
+      playSound(soundName);
     },
   );
 

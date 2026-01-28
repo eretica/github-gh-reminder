@@ -18,6 +18,11 @@ vi.mock("./tray", () => ({
   getTray: vi.fn(),
 }));
 
+// Mock sound module to prevent import errors
+vi.mock("./sound", () => ({
+  playSound: vi.fn(),
+}));
+
 import {
   type NotifierDeps,
   notifyError,
@@ -62,6 +67,7 @@ function createMockDeps(): NotifierDeps & {
       reminderIntervalHours: 4,
       checkIntervalMinutes: 5,
       notificationSound: true,
+      notificationSoundName: "Basso",
     })),
     mockNotification,
     get clickHandler() {

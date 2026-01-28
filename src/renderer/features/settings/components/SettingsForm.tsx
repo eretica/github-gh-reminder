@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import type { Settings } from "../../../../shared/types";
+import { useSystemSounds } from "../hooks/useSystemSounds";
 import { CHECK_INTERVAL_OPTIONS, REMINDER_INTERVAL_OPTIONS } from "./constants";
 
 interface SettingsFormProps {
@@ -16,6 +17,7 @@ export function SettingsForm({
   const [formData, setFormData] = useState<Settings>(settings);
   const [saving, setSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
+  const { sounds, playSound } = useSystemSounds();
 
   useEffect(() => {
     setFormData(settings);
@@ -27,7 +29,8 @@ export function SettingsForm({
       formData.enableReminder !== settings.enableReminder ||
       formData.reminderIntervalHours !== settings.reminderIntervalHours ||
       formData.checkIntervalMinutes !== settings.checkIntervalMinutes ||
-      formData.notificationSound !== settings.notificationSound;
+      formData.notificationSound !== settings.notificationSound ||
+      formData.notificationSoundName !== settings.notificationSoundName;
 
     setHasChanges(changed);
   }, [formData, settings]);
@@ -116,6 +119,43 @@ export function SettingsForm({
             </p>
           </div>
         </label>
+
+        {/* Sound selection */}
+        {formData.notificationSound && (
+          <div className="ml-7">
+            <label className="block text-sm text-gray-700 mb-1">
+              Notification sound
+              <div className="flex items-center gap-2 mt-1">
+                <select
+                  value={formData.notificationSoundName || "Basso"}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      notificationSoundName: e.target.value,
+                    })
+                  }
+                  className="block w-full max-w-xs rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm"
+                >
+                  {sounds.map((sound) => (
+                    <option key={sound} value={sound}>
+                      {sound}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  onClick={() =>
+                    playSound(formData.notificationSoundName || "Basso")
+                  }
+                  className="px-3 py-1.5 text-sm text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-md transition-colors"
+                  title="Preview sound"
+                >
+                  ▶
+                </button>
+              </div>
+            </label>
+          </div>
+        )}
 
         {/* Reminder interval */}
         {formData.enableReminder && (

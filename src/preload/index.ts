@@ -26,6 +26,12 @@ const api: IpcApi = {
   setSettings: (settings: Settings): Promise<void> =>
     ipcRenderer.invoke(IPC_CHANNELS.SETTINGS_SET, settings),
 
+  // System Sounds
+  getSystemSounds: (): Promise<string[]> =>
+    ipcRenderer.invoke(IPC_CHANNELS.SOUND_LIST),
+  playSound: (soundName: string): Promise<void> =>
+    ipcRenderer.invoke(IPC_CHANNELS.SOUND_PLAY, soundName),
+
   // Pull Requests
   listPullRequests: (): Promise<PullRequest[]> =>
     ipcRenderer.invoke(IPC_CHANNELS.PR_LIST),
