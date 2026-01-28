@@ -45,6 +45,7 @@ describe("PRScheduler", () => {
     reminderIntervalHours: 1,
     checkIntervalMinutes: 5,
     notificationSound: true,
+    notificationSoundName: "Basso",
   };
 
   let mockDb: {

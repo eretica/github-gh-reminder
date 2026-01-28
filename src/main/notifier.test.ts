@@ -18,6 +18,11 @@ vi.mock("./tray", () => ({
   getTray: vi.fn(),
 }));
 
+// Mock sound module to prevent import errors
+vi.mock("./sound", () => ({
+  playSound: vi.fn(),
+}));
+
 import {
   type NotifierDeps,
   notifyError,
@@ -62,6 +67,7 @@ function createMockDeps(): NotifierDeps & {
       reminderIntervalHours: 4,
       checkIntervalMinutes: 5,
       notificationSound: true,
+      notificationSoundName: "Basso",
     })),
     mockNotification,
     get clickHandler() {
@@ -101,7 +107,7 @@ describe("notifier", () => {
       expect(mockDeps.lastOptions).toEqual({
         title: "New PR Review Request",
         body: "owner/repo: #123 Test PR\nby @testuser",
-        silent: false,
+        silent: true,
       });
     });
 
@@ -198,7 +204,7 @@ describe("notifier", () => {
       expect(mockDeps.lastOptions).toEqual({
         title: "PR Review Reminder",
         body: "owner/repo: #123 Test PR",
-        silent: false,
+        silent: true,
       });
     });
 
@@ -208,7 +214,7 @@ describe("notifier", () => {
       expect(mockDeps.lastOptions).toEqual({
         title: "PR Review Reminder",
         body: "You have 2 PRs waiting for your review",
-        silent: false,
+        silent: true,
       });
     });
 

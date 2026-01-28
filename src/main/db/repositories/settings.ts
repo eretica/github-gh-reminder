@@ -19,6 +19,8 @@ export class SettingsRepository {
       reminderIntervalHours: settingsMap.get("reminderIntervalHours") ?? 4,
       checkIntervalMinutes: settingsMap.get("checkIntervalMinutes") ?? 5,
       notificationSound: settingsMap.get("notificationSound") ?? true,
+      notificationSoundName:
+        settingsMap.get("notificationSoundName") ?? "Basso",
     };
   }
 

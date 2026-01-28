@@ -39,6 +39,7 @@ export interface Settings {
   reminderIntervalHours: number;
   checkIntervalMinutes: number;
   notificationSound: boolean;
+  notificationSoundName?: string;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -47,6 +48,7 @@ export const DEFAULT_SETTINGS: Settings = {
   reminderIntervalHours: 1,
   checkIntervalMinutes: 5,
   notificationSound: true,
+  notificationSoundName: "Basso",
 };
 
 export interface IpcApi {
@@ -60,6 +62,10 @@ export interface IpcApi {
   // Settings
   getSettings(): Promise<Settings>;
   setSettings(settings: Settings): Promise<void>;
+
+  // System Sounds
+  getSystemSounds(): Promise<string[]>;
+  playSound(soundName: string): Promise<void>;
 
   // Pull Requests
   listPullRequests(): Promise<PullRequest[]>;
@@ -89,6 +95,8 @@ export const IPC_CHANNELS = {
   REPO_REORDER: "repo:reorder",
   SETTINGS_GET: "settings:get",
   SETTINGS_SET: "settings:set",
+  SOUND_LIST: "sound:list",
+  SOUND_PLAY: "sound:play",
   PR_LIST: "pr:list",
   PR_REFRESH: "pr:refresh",
   PR_OPEN: "pr:open",

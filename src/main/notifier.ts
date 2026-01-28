@@ -2,6 +2,7 @@ import { Notification, shell } from "electron";
 import type { PullRequest, Settings } from "../shared/types";
 import { getDatabase } from "./db";
 import { SettingsRepository } from "./db/repositories";
+import { playSound } from "./sound";
 import { getTray } from "./tray";
 import { createMainWindow, setTrayBounds } from "./windows";
 
@@ -47,7 +48,7 @@ export async function notifyNewPR(
   const notification = deps.createNotification({
     title: "New PR Review Request",
     body: `${pr.repositoryName}: #${pr.prNumber} ${pr.title}\nby @${pr.author}`,
-    silent: !settings.notificationSound,
+    silent: true,
   });
 
   notification.on("click", () => {
@@ -59,6 +60,11 @@ export async function notifyNewPR(
   });
 
   notification.show();
+
+  // Play custom sound if enabled
+  if (settings.notificationSound && settings.notificationSoundName) {
+    playSound(settings.notificationSoundName);
+  }
 }
 
 export async function notifyReminder(
@@ -77,7 +83,7 @@ export async function notifyReminder(
   const notification = deps.createNotification({
     title: "PR Review Reminder",
     body,
-    silent: !settings.notificationSound,
+    silent: true,
   });
 
   notification.on("click", () => {
@@ -99,6 +105,11 @@ export async function notifyReminder(
   });
 
   notification.show();
+
+  // Play custom sound if enabled
+  if (settings.notificationSound && settings.notificationSoundName) {
+    playSound(settings.notificationSoundName);
+  }
 }
 
 export function notifyError(

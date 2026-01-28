@@ -8,3 +8,4 @@ export {
 export { SettingsForm } from "./components/SettingsForm";
 // Hooks
 export { useSettings } from "./hooks/useSettings";
+export { useSystemSounds } from "./hooks/useSystemSounds";
