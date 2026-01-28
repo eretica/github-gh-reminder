@@ -107,7 +107,7 @@ describe("notifier", () => {
       expect(mockDeps.lastOptions).toEqual({
         title: "New PR Review Request",
         body: "owner/repo: #123 Test PR\nby @testuser",
-        silent: false,
+        silent: true,
       });
     });
 
@@ -204,7 +204,7 @@ describe("notifier", () => {
       expect(mockDeps.lastOptions).toEqual({
         title: "PR Review Reminder",
         body: "owner/repo: #123 Test PR",
-        silent: false,
+        silent: true,
       });
     });
 
@@ -214,7 +214,7 @@ describe("notifier", () => {
       expect(mockDeps.lastOptions).toEqual({
         title: "PR Review Reminder",
         body: "You have 2 PRs waiting for your review",
-        silent: false,
+        silent: true,
       });
     });
 
