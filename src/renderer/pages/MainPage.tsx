@@ -20,6 +20,7 @@ export default function MainPage(): JSX.Element {
     refresh,
     openPullRequest,
     lastUpdated,
+    newPRIds,
   } = usePullRequests();
 
   const { toasts, showToast, hideToast } = useToast();
@@ -116,6 +117,7 @@ export default function MainPage(): JSX.Element {
             pullRequests={pullRequests}
             repositories={repositories}
             onOpenPR={openPullRequest}
+            newPRIds={newPRIds}
           />
         )}
       </main>

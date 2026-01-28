@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { PullRequest, Repository } from "../../../../shared/types";
 
 interface UsePullRequestsReturn {
@@ -9,6 +9,7 @@ interface UsePullRequestsReturn {
   refresh: () => Promise<void>;
   openPullRequest: (url: string) => Promise<void>;
   lastUpdated: Date | null;
+  newPRIds: Set<string>;
 }
 
 export function usePullRequests(): UsePullRequestsReturn {
@@ -17,6 +18,8 @@ export function usePullRequests(): UsePullRequestsReturn {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const prevPRIds = useRef<Set<string>>(new Set());
+  const [newPRIds, setNewPRIds] = useState<Set<string>>(new Set());
 
   const loadRepositories = useCallback(async () => {
     try {
@@ -35,7 +38,19 @@ export function usePullRequests(): UsePullRequestsReturn {
         window.api.refreshPullRequests(),
         loadRepositories(),
       ]);
+
+      // Detect new PRs
+      const currentIds = new Set(prs.map((pr) => pr.id));
+      const newIds = new Set<string>();
+      for (const id of currentIds) {
+        if (!prevPRIds.current.has(id)) {
+          newIds.add(id);
+        }
+      }
+
       setPullRequests(prs);
+      setNewPRIds(newIds);
+      prevPRIds.current = currentIds;
       setLastUpdated(new Date());
     } catch (err) {
       setError(
@@ -55,7 +70,12 @@ export function usePullRequests(): UsePullRequestsReturn {
           window.api.listPullRequests(),
           loadRepositories(),
         ]);
+
+        // Initial load: no animation
+        const currentIds = new Set(prs.map((pr) => pr.id));
         setPullRequests(prs);
+        setNewPRIds(new Set());
+        prevPRIds.current = currentIds;
         setLastUpdated(new Date());
       } catch (err) {
         setError(
@@ -70,7 +90,18 @@ export function usePullRequests(): UsePullRequestsReturn {
 
     // Subscribe to updates
     const unsubscribe = window.api.onPullRequestsUpdated((prs) => {
+      // Detect new PRs
+      const currentIds = new Set(prs.map((pr) => pr.id));
+      const newIds = new Set<string>();
+      for (const id of currentIds) {
+        if (!prevPRIds.current.has(id)) {
+          newIds.add(id);
+        }
+      }
+
       setPullRequests(prs);
+      setNewPRIds(newIds);
+      prevPRIds.current = currentIds;
       setLastUpdated(new Date());
       loadRepositories();
     });
@@ -96,5 +127,6 @@ export function usePullRequests(): UsePullRequestsReturn {
     refresh,
     openPullRequest,
     lastUpdated,
+    newPRIds,
   };
 }
