@@ -93,6 +93,7 @@ describe("notifier", () => {
       firstSeenAt: "2024-01-01T00:00:00Z",
       notifiedAt: null,
       lastRemindedAt: null,
+      reminderEnabled: true,
     };
 
     it("creates notification with correct title and body", async () => {
@@ -155,6 +156,7 @@ describe("notifier", () => {
       firstSeenAt: "2024-01-01T00:00:00Z",
       notifiedAt: null,
       lastRemindedAt: null,
+      reminderEnabled: true,
     };
 
     const mockMultiplePRs: PullRequest[] = [
@@ -170,6 +172,7 @@ describe("notifier", () => {
         firstSeenAt: "2024-01-01T00:00:00Z",
         notifiedAt: null,
         lastRemindedAt: null,
+        reminderEnabled: true,
       },
       {
         id: "pr-2",
@@ -183,6 +186,7 @@ describe("notifier", () => {
         firstSeenAt: "2024-01-02T00:00:00Z",
         notifiedAt: null,
         lastRemindedAt: null,
+        reminderEnabled: true,
       },
     ];
 

@@ -248,6 +248,7 @@ class PRScheduler {
       firstSeenAt: pr.firstSeenAt,
       notifiedAt: pr.notifiedAt,
       lastRemindedAt: pr.lastRemindedAt,
+      reminderEnabled: pr.reminderEnabled === 1,
       // Extended PR details from GitHub
       isDraft: ghPR?.isDraft,
       state: ghPR?.state,

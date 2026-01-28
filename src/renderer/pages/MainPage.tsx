@@ -38,6 +38,20 @@ export default function MainPage(): JSX.Element {
     window.api.quitApp();
   };
 
+  const handleToggleReminder = async (
+    prId: string,
+    enabled: boolean,
+  ): Promise<void> => {
+    try {
+      await window.api.togglePRReminder(prId, enabled);
+    } catch (_err) {
+      showToast(
+        `Failed to ${enabled ? "enable" : "disable"} reminder`,
+        "error",
+      );
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-white rounded-lg shadow-xl border border-gray-200 overflow-hidden">
       {/* Header */}
@@ -117,6 +131,7 @@ export default function MainPage(): JSX.Element {
             pullRequests={pullRequests}
             repositories={repositories}
             onOpenPR={openPullRequest}
+            onToggleReminder={handleToggleReminder}
             newPRIds={newPRIds}
           />
         )}

@@ -39,6 +39,7 @@ describe("PullRequestList - Animation", () => {
       firstSeenAt: new Date().toISOString(),
       notifiedAt: null,
       lastRemindedAt: null,
+      reminderEnabled: true,
     },
     {
       id: "pr2",
@@ -52,6 +53,7 @@ describe("PullRequestList - Animation", () => {
       firstSeenAt: new Date().toISOString(),
       notifiedAt: null,
       lastRemindedAt: null,
+      reminderEnabled: true,
     },
     {
       id: "pr3",
@@ -65,6 +67,7 @@ describe("PullRequestList - Animation", () => {
       firstSeenAt: new Date().toISOString(),
       notifiedAt: null,
       lastRemindedAt: null,
+      reminderEnabled: true,
     },
   ];
 
@@ -79,6 +82,7 @@ describe("PullRequestList - Animation", () => {
           pullRequests={mockPRs}
           repositories={mockRepositories}
           onOpenPR={onOpenPR}
+          onToggleReminder={vi.fn()}
           newPRIds={newPRIds}
         />,
       );
@@ -116,6 +120,7 @@ describe("PullRequestList - Animation", () => {
           pullRequests={mockPRs}
           repositories={mockRepositories}
           onOpenPR={onOpenPR}
+          onToggleReminder={vi.fn()}
           newPRIds={newPRIds}
         />,
       );
@@ -144,6 +149,7 @@ describe("PullRequestList - Animation", () => {
           pullRequests={mockPRs}
           repositories={mockRepositories}
           onOpenPR={onOpenPR}
+          onToggleReminder={vi.fn()}
           newPRIds={newPRIds}
         />,
       );
@@ -175,6 +181,7 @@ describe("PullRequestList - Animation", () => {
           pullRequests={mockPRs}
           repositories={mockRepositories}
           onOpenPR={onOpenPR}
+          onToggleReminder={vi.fn()}
           // newPRIds is omitted, should default to empty Set
         />,
       );
@@ -197,6 +204,7 @@ describe("PullRequestList - Animation", () => {
           pullRequests={mockPRs}
           repositories={mockRepositories}
           onOpenPR={onOpenPR}
+          onToggleReminder={vi.fn()}
           newPRIds={newPRIds}
         />,
       );
@@ -237,6 +245,7 @@ describe("PullRequestList - Animation", () => {
           pullRequests={mockPRs}
           repositories={mockRepositories}
           onOpenPR={onOpenPR}
+          onToggleReminder={vi.fn()}
           newPRIds={newPRIds}
         />,
       );

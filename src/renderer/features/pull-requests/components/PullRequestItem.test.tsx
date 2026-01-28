@@ -20,32 +20,33 @@ describe("PullRequestItem", () => {
     firstSeenAt: new Date().toISOString(),
     notifiedAt: null,
     lastRemindedAt: null,
+      reminderEnabled: true,
   };
 
   it("renders PR number", () => {
     const onOpen = vi.fn();
-    render(<PullRequestItem pullRequest={mockPR} onOpen={onOpen} />);
+    render(<PullRequestItem pullRequest={mockPR} onOpen={onOpen} onToggleReminder={vi.fn()} />);
 
     expect(screen.getByText("#123")).toBeInTheDocument();
   });
 
   it("renders PR title", () => {
     const onOpen = vi.fn();
-    render(<PullRequestItem pullRequest={mockPR} onOpen={onOpen} />);
+    render(<PullRequestItem pullRequest={mockPR} onOpen={onOpen} onToggleReminder={vi.fn()} />);
 
     expect(screen.getByText("Test Pull Request")).toBeInTheDocument();
   });
 
   it("renders author name with @ symbol", () => {
     const onOpen = vi.fn();
-    render(<PullRequestItem pullRequest={mockPR} onOpen={onOpen} />);
+    render(<PullRequestItem pullRequest={mockPR} onOpen={onOpen} onToggleReminder={vi.fn()} />);
 
     expect(screen.getByText("@testuser")).toBeInTheDocument();
   });
 
   it("calls onOpen with URL when clicked", () => {
     const onOpen = vi.fn();
-    render(<PullRequestItem pullRequest={mockPR} onOpen={onOpen} />);
+    render(<PullRequestItem pullRequest={mockPR} onOpen={onOpen} onToggleReminder={vi.fn()} />);
 
     const item = screen.getByText("Test Pull Request").closest("div");
     fireEvent.click(item!.parentElement!.parentElement!);
@@ -62,7 +63,7 @@ describe("PullRequestItem", () => {
         createdAt: new Date().toISOString(),
       };
       const onOpen = vi.fn();
-      render(<PullRequestItem pullRequest={recentPR} onOpen={onOpen} />);
+      render(<PullRequestItem pullRequest={recentPR} onOpen={onOpen} onToggleReminder={vi.fn()} />);
 
       expect(screen.getByText("just now")).toBeInTheDocument();
     });
@@ -73,7 +74,7 @@ describe("PullRequestItem", () => {
         createdAt: new Date(Date.now() - 30 * 60 * 1000).toISOString(), // 30 min ago
       };
       const onOpen = vi.fn();
-      render(<PullRequestItem pullRequest={minutesAgoPR} onOpen={onOpen} />);
+      render(<PullRequestItem pullRequest={minutesAgoPR} onOpen={onOpen} onToggleReminder={vi.fn()} />);
 
       expect(screen.getByText("30 min ago")).toBeInTheDocument();
     });
@@ -84,7 +85,7 @@ describe("PullRequestItem", () => {
         createdAt: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(), // 5 hours ago
       };
       const onOpen = vi.fn();
-      render(<PullRequestItem pullRequest={hoursAgoPR} onOpen={onOpen} />);
+      render(<PullRequestItem pullRequest={hoursAgoPR} onOpen={onOpen} onToggleReminder={vi.fn()} />);
 
       expect(screen.getByText("5 hours ago")).toBeInTheDocument();
     });
@@ -95,7 +96,7 @@ describe("PullRequestItem", () => {
         createdAt: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(), // 1 hour ago
       };
       const onOpen = vi.fn();
-      render(<PullRequestItem pullRequest={oneHourAgoPR} onOpen={onOpen} />);
+      render(<PullRequestItem pullRequest={oneHourAgoPR} onOpen={onOpen} onToggleReminder={vi.fn()} />);
 
       expect(screen.getByText("1 hour ago")).toBeInTheDocument();
     });
@@ -106,7 +107,7 @@ describe("PullRequestItem", () => {
         createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(), // 3 days ago
       };
       const onOpen = vi.fn();
-      render(<PullRequestItem pullRequest={daysAgoPR} onOpen={onOpen} />);
+      render(<PullRequestItem pullRequest={daysAgoPR} onOpen={onOpen} onToggleReminder={vi.fn()} />);
 
       expect(screen.getByText("3 days ago")).toBeInTheDocument();
     });
@@ -117,7 +118,7 @@ describe("PullRequestItem", () => {
         createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(), // 1 day ago
       };
       const onOpen = vi.fn();
-      render(<PullRequestItem pullRequest={oneDayAgoPR} onOpen={onOpen} />);
+      render(<PullRequestItem pullRequest={oneDayAgoPR} onOpen={onOpen} onToggleReminder={vi.fn()} />);
 
       expect(screen.getByText("1 day ago")).toBeInTheDocument();
     });
@@ -130,7 +131,7 @@ describe("PullRequestItem", () => {
         ).toISOString(), // 14 days ago
       };
       const onOpen = vi.fn();
-      render(<PullRequestItem pullRequest={weeksAgoPR} onOpen={onOpen} />);
+      render(<PullRequestItem pullRequest={weeksAgoPR} onOpen={onOpen} onToggleReminder={vi.fn()} />);
 
       // Should show a formatted date instead of "X days ago"
       const expectedDate = new Date(weeksAgoPR.createdAt).toLocaleDateString();
@@ -140,7 +141,7 @@ describe("PullRequestItem", () => {
 
   it("renders open in browser button", () => {
     const onOpen = vi.fn();
-    render(<PullRequestItem pullRequest={mockPR} onOpen={onOpen} />);
+    render(<PullRequestItem pullRequest={mockPR} onOpen={onOpen} onToggleReminder={vi.fn()} />);
 
     expect(screen.getByTitle("Open in browser")).toBeInTheDocument();
   });
@@ -152,7 +153,7 @@ describe("PullRequestItem", () => {
         isDraft: true,
       };
       const onOpen = vi.fn();
-      render(<PullRequestItem pullRequest={draftPR} onOpen={onOpen} />);
+      render(<PullRequestItem pullRequest={draftPR} onOpen={onOpen} onToggleReminder={vi.fn()} />);
 
       expect(screen.getByText("Draft")).toBeInTheDocument();
     });
@@ -163,7 +164,7 @@ describe("PullRequestItem", () => {
         isDraft: false,
       };
       const onOpen = vi.fn();
-      render(<PullRequestItem pullRequest={nonDraftPR} onOpen={onOpen} />);
+      render(<PullRequestItem pullRequest={nonDraftPR} onOpen={onOpen} onToggleReminder={vi.fn()} />);
 
       expect(screen.queryByText("Draft")).not.toBeInTheDocument();
     });
@@ -174,7 +175,7 @@ describe("PullRequestItem", () => {
         reviewDecision: "APPROVED",
       };
       const onOpen = vi.fn();
-      render(<PullRequestItem pullRequest={approvedPR} onOpen={onOpen} />);
+      render(<PullRequestItem pullRequest={approvedPR} onOpen={onOpen} onToggleReminder={vi.fn()} />);
 
       expect(screen.getByText("Approved")).toBeInTheDocument();
     });
@@ -186,7 +187,7 @@ describe("PullRequestItem", () => {
       };
       const onOpen = vi.fn();
       render(
-        <PullRequestItem pullRequest={changesRequestedPR} onOpen={onOpen} />,
+        <PullRequestItem pullRequest={changesRequestedPR} onOpen={onOpen} onToggleReminder={vi.fn()} />,
       );
 
       expect(screen.getByText("Changes requested")).toBeInTheDocument();
@@ -199,7 +200,7 @@ describe("PullRequestItem", () => {
       };
       const onOpen = vi.fn();
       render(
-        <PullRequestItem pullRequest={reviewRequiredPR} onOpen={onOpen} />,
+        <PullRequestItem pullRequest={reviewRequiredPR} onOpen={onOpen} onToggleReminder={vi.fn()} />,
       );
 
       expect(screen.getByText("Review required")).toBeInTheDocument();
@@ -211,7 +212,7 @@ describe("PullRequestItem", () => {
         statusCheckRollup: { state: "SUCCESS" },
       };
       const onOpen = vi.fn();
-      render(<PullRequestItem pullRequest={successPR} onOpen={onOpen} />);
+      render(<PullRequestItem pullRequest={successPR} onOpen={onOpen} onToggleReminder={vi.fn()} />);
 
       expect(screen.getByText("SUCCESS")).toBeInTheDocument();
     });
@@ -222,7 +223,7 @@ describe("PullRequestItem", () => {
         statusCheckRollup: { state: "FAILURE" },
       };
       const onOpen = vi.fn();
-      render(<PullRequestItem pullRequest={failurePR} onOpen={onOpen} />);
+      render(<PullRequestItem pullRequest={failurePR} onOpen={onOpen} onToggleReminder={vi.fn()} />);
 
       expect(screen.getByText("FAILURE")).toBeInTheDocument();
     });
@@ -233,7 +234,7 @@ describe("PullRequestItem", () => {
         commentsCount: 5,
       };
       const onOpen = vi.fn();
-      render(<PullRequestItem pullRequest={prWithComments} onOpen={onOpen} />);
+      render(<PullRequestItem pullRequest={prWithComments} onOpen={onOpen} onToggleReminder={vi.fn()} />);
 
       expect(screen.getByText("5")).toBeInTheDocument();
       expect(screen.getByTitle("Comments")).toBeInTheDocument();
@@ -246,7 +247,7 @@ describe("PullRequestItem", () => {
       };
       const onOpen = vi.fn();
       render(
-        <PullRequestItem pullRequest={prWithNoComments} onOpen={onOpen} />,
+        <PullRequestItem pullRequest={prWithNoComments} onOpen={onOpen} onToggleReminder={vi.fn()} />,
       );
 
       expect(screen.queryByTitle("Comments")).not.toBeInTheDocument();
@@ -258,7 +259,7 @@ describe("PullRequestItem", () => {
         changedFiles: 10,
       };
       const onOpen = vi.fn();
-      render(<PullRequestItem pullRequest={prWithFiles} onOpen={onOpen} />);
+      render(<PullRequestItem pullRequest={prWithFiles} onOpen={onOpen} onToggleReminder={vi.fn()} />);
 
       expect(screen.getByText("10")).toBeInTheDocument();
       expect(screen.getByTitle("Changed files")).toBeInTheDocument();
@@ -270,7 +271,7 @@ describe("PullRequestItem", () => {
         reviewRequestsCount: 3,
       };
       const onOpen = vi.fn();
-      render(<PullRequestItem pullRequest={prWithReviewers} onOpen={onOpen} />);
+      render(<PullRequestItem pullRequest={prWithReviewers} onOpen={onOpen} onToggleReminder={vi.fn()} />);
 
       expect(screen.getByText("3")).toBeInTheDocument();
       expect(screen.getByTitle("Reviewers requested")).toBeInTheDocument();
@@ -282,7 +283,7 @@ describe("PullRequestItem", () => {
         mergeable: "CONFLICTING",
       };
       const onOpen = vi.fn();
-      render(<PullRequestItem pullRequest={conflictingPR} onOpen={onOpen} />);
+      render(<PullRequestItem pullRequest={conflictingPR} onOpen={onOpen} onToggleReminder={vi.fn()} />);
 
       expect(screen.getByText("CONFLICTS")).toBeInTheDocument();
       expect(screen.getByTitle("Has merge conflicts")).toBeInTheDocument();
@@ -294,7 +295,7 @@ describe("PullRequestItem", () => {
         mergeable: "MERGEABLE",
       };
       const onOpen = vi.fn();
-      render(<PullRequestItem pullRequest={mergeablePR} onOpen={onOpen} />);
+      render(<PullRequestItem pullRequest={mergeablePR} onOpen={onOpen} onToggleReminder={vi.fn()} />);
 
       expect(screen.queryByText("CONFLICTS")).not.toBeInTheDocument();
     });
@@ -311,7 +312,7 @@ describe("PullRequestItem", () => {
         mergeable: "MERGEABLE",
       };
       const onOpen = vi.fn();
-      render(<PullRequestItem pullRequest={fullDetailsPR} onOpen={onOpen} />);
+      render(<PullRequestItem pullRequest={fullDetailsPR} onOpen={onOpen} onToggleReminder={vi.fn()} />);
 
       expect(screen.getByText("Draft")).toBeInTheDocument();
       expect(screen.getByText("Approved")).toBeInTheDocument();

@@ -166,6 +166,7 @@ describe("tray", () => {
         firstSeenAt: "2024-01-01T00:00:00Z",
         notifiedAt: null,
         lastRemindedAt: null,
+        reminderEnabled: true,
       };
 
       updateTrayMenu([singlePR]);
@@ -192,6 +193,7 @@ describe("tray", () => {
           firstSeenAt: "2024-01-01T00:00:00Z",
           notifiedAt: null,
           lastRemindedAt: null,
+        reminderEnabled: true,
         },
         {
           id: "pr-2",
@@ -205,6 +207,7 @@ describe("tray", () => {
           firstSeenAt: "2024-01-02T00:00:00Z",
           notifiedAt: null,
           lastRemindedAt: null,
+        reminderEnabled: true,
         },
       ];
 
@@ -247,6 +250,7 @@ describe("tray", () => {
           firstSeenAt: "2024-01-01T00:00:00Z",
           notifiedAt: null,
           lastRemindedAt: null,
+        reminderEnabled: true,
         },
       ];
 
@@ -335,6 +339,7 @@ describe("tray", () => {
           firstSeenAt: "2024-01-01T00:00:00Z",
           notifiedAt: null,
           lastRemindedAt: null,
+        reminderEnabled: true,
         },
       ];
 
@@ -377,6 +382,7 @@ describe("tray", () => {
           firstSeenAt: "2024-01-01T00:00:00Z",
           notifiedAt: null,
           lastRemindedAt: null,
+        reminderEnabled: true,
         },
       ]);
 

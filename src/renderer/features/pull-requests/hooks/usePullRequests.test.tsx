@@ -34,6 +34,7 @@ describe("usePullRequests", () => {
       firstSeenAt: new Date().toISOString(),
       notifiedAt: null,
       lastRemindedAt: null,
+      reminderEnabled: true,
     },
     {
       id: "pr2",
@@ -47,6 +48,7 @@ describe("usePullRequests", () => {
       firstSeenAt: new Date().toISOString(),
       notifiedAt: null,
       lastRemindedAt: null,
+      reminderEnabled: true,
     },
   ];
 
@@ -164,6 +166,7 @@ describe("usePullRequests", () => {
         firstSeenAt: new Date().toISOString(),
         notifiedAt: null,
         lastRemindedAt: null,
+      reminderEnabled: true,
       };
 
       (
@@ -231,6 +234,7 @@ describe("usePullRequests", () => {
         firstSeenAt: new Date().toISOString(),
         notifiedAt: null,
         lastRemindedAt: null,
+      reminderEnabled: true,
       };
 
       // Trigger subscription callback

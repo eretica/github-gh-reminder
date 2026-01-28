@@ -20,6 +20,7 @@ export interface PullRequest {
   firstSeenAt: string;
   notifiedAt: string | null;
   lastRemindedAt: string | null;
+  reminderEnabled: boolean;
   // Extended PR details
   isDraft?: boolean;
   state?: string;
@@ -65,6 +66,7 @@ export interface IpcApi {
   listPullRequests(): Promise<PullRequest[]>;
   refreshPullRequests(): Promise<PullRequest[]>;
   openPullRequest(url: string): Promise<void>;
+  togglePRReminder(prId: string, enabled: boolean): Promise<void>;
 
   // Windows
   openSettings(): Promise<void>;
@@ -92,6 +94,7 @@ export const IPC_CHANNELS = {
   PR_LIST: "pr:list",
   PR_REFRESH: "pr:refresh",
   PR_OPEN: "pr:open",
+  PR_TOGGLE_REMINDER: "pr:toggle-reminder",
   PR_UPDATED: "pr:updated",
   OPEN_SETTINGS: "window:open-settings",
   CLOSE_SETTINGS: "window:close-settings",

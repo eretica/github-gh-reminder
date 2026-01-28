@@ -63,6 +63,7 @@ export class PullRequestRepository {
       firstSeenAt: now,
       notifiedAt: data.notifiedAt ?? null,
       lastRemindedAt: data.lastRemindedAt ?? null,
+      reminderEnabled: (data.reminderEnabled ?? true) ? 1 : 0,
     };
 
     await this.db.insert(schema.pullRequests).values(newPR);
@@ -89,6 +90,8 @@ export class PullRequestRepository {
     if (data.notifiedAt !== undefined) updateData.notifiedAt = data.notifiedAt;
     if (data.lastRemindedAt !== undefined)
       updateData.lastRemindedAt = data.lastRemindedAt;
+    if (data.reminderEnabled !== undefined)
+      updateData.reminderEnabled = data.reminderEnabled ? 1 : 0;
 
     await this.db
       .update(schema.pullRequests)
@@ -125,6 +128,7 @@ export class PullRequestRepository {
       firstSeenAt: record.firstSeenAt,
       notifiedAt: record.notifiedAt,
       lastRemindedAt: record.lastRemindedAt,
+      reminderEnabled: record.reminderEnabled === 1,
     };
   }
 }

@@ -5,6 +5,7 @@ interface PullRequestListProps {
   pullRequests: PullRequest[];
   repositories: Repository[];
   onOpenPR: (url: string) => void;
+  onToggleReminder: (prId: string, enabled: boolean) => void;
   newPRIds?: Set<string>;
 }
 
@@ -12,6 +13,7 @@ export function PullRequestList({
   pullRequests,
   repositories,
   onOpenPR,
+  onToggleReminder,
   newPRIds = new Set(),
 }: PullRequestListProps): JSX.Element {
   // Group PRs by repository name
@@ -116,7 +118,11 @@ export function PullRequestList({
                         : {}
                     }
                   >
-                    <PullRequestItem pullRequest={pr} onOpen={onOpenPR} />
+                    <PullRequestItem
+                      pullRequest={pr}
+                      onOpen={onOpenPR}
+                      onToggleReminder={onToggleReminder}
+                    />
                   </div>
                 ))
               ) : (

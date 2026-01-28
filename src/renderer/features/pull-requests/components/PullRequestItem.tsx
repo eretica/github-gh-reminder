@@ -6,11 +6,13 @@ import { getReviewDecisionBadge, getStatusColor } from "../utils/status";
 interface PullRequestItemProps {
   pullRequest: PullRequest;
   onOpen: (url: string) => void;
+  onToggleReminder: (prId: string, enabled: boolean) => void;
 }
 
 export function PullRequestItem({
   pullRequest,
   onOpen,
+  onToggleReminder,
 }: PullRequestItemProps): JSX.Element {
   const ciStatus = pullRequest.statusCheckRollup?.state;
   const hasDetails =
@@ -169,24 +171,52 @@ export function PullRequestItem({
             </div>
           )}
         </div>
-        <button
-          className="p-1 text-gray-400 hover:text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity"
-          title="Open in browser"
-        >
-          <svg
-            className="w-4 h-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
+        <div className="flex items-center gap-1">
+          <button
+            className="p-1 text-gray-400 hover:text-yellow-500 opacity-0 group-hover:opacity-100 transition-opacity"
+            title={
+              pullRequest.reminderEnabled
+                ? "Reminder enabled"
+                : "Reminder disabled"
+            }
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggleReminder(pullRequest.id, !pullRequest.reminderEnabled);
+            }}
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-            />
-          </svg>
-        </button>
+            {pullRequest.reminderEnabled ? (
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z" />
+              </svg>
+            ) : (
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path
+                  fillRule="evenodd"
+                  d="M13.477 14.89A6 6 0 015.11 6.524l8.367 8.368zm1.414-1.414L6.524 5.11a6 6 0 018.367 8.367zM18 10a8 8 0 11-16 0 8 8 0 0116 0z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            )}
+          </button>
+          <button
+            className="p-1 text-gray-400 hover:text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity"
+            title="Open in browser"
+          >
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+              />
+            </svg>
+          </button>
+        </div>
       </div>
     </div>
   );
