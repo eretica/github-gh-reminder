@@ -33,18 +33,33 @@ jobs:
           echo "Previous tag: $PREVIOUS_TAG"
           echo "Current tag: ${{ github.ref_name }}"
 
-          # コミットログからリリースノートを生成
+          # リリースノートを生成
           {
-            echo "## 変更内容"
-            echo ""
             if [ -n "$PREVIOUS_TAG" ]; then
-              git log ${PREVIOUS_TAG}..${{ github.ref_name }} --oneline --no-merges | while read line; do
-                COMMIT_MSG=$(echo "$line" | sed 's/^[a-f0-9]* //')
-                echo "* $COMMIT_MSG"
+              echo "## What's Changed"
+              echo ""
+
+              # マージコミットからPR番号を抽出し、PRタイトルを取得
+              git log ${PREVIOUS_TAG}..${{ github.ref_name }} --merges --oneline | while read line; do
+                # PR番号を抽出 (例: "Merge pull request #123" から 123 を取得)
+                PR_NUM=$(echo "$line" | grep -oE '#[0-9]+' | head -1 | sed 's/#//')
+                if [ -n "$PR_NUM" ]; then
+                  # GitHub APIでPRタイトルを取得
+                  PR_TITLE=$(gh pr view $PR_NUM --json title --jq '.title' 2>/dev/null || echo "PR #$PR_NUM")
+                  # PRタイトルの先頭がfeat/fix等の場合はそのまま、そうでない場合はtypeを推測しない
+                  if [[ "$PR_TITLE" =~ ^(feat|fix|docs|chore|refactor|test|style|perf|ci|build): ]]; then
+                    echo "- $PR_TITLE (#$PR_NUM)"
+                  else
+                    echo "- $PR_TITLE (#$PR_NUM)"
+                  fi
+                fi
               done
+
               echo ""
               echo "**Full Changelog**: https://github.com/${{ github.repository }}/compare/${PREVIOUS_TAG}...${{ github.ref_name }}"
             else
+              echo "## What's Changed"
+              echo ""
               echo "初回リリース"
             fi
           } > release-notes.md
