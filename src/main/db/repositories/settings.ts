@@ -56,15 +56,15 @@ export class SettingsRepository {
       [keyof Settings, Settings[keyof Settings]]
     >;
 
-    await this.db.transaction(async (tx) => {
+    this.db.transaction((tx) => {
       for (const [key, value] of entries) {
-        await tx
-          .insert(schema.settings)
+        tx.insert(schema.settings)
           .values({ key, value: JSON.stringify(value) })
           .onConflictDoUpdate({
             target: schema.settings.key,
             set: { value: JSON.stringify(value) },
-          });
+          })
+          .run();
       }
     });
   }
