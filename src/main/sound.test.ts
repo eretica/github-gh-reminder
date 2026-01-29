@@ -20,14 +20,15 @@ vi.mock("node:fs", () => ({
   ]),
 }));
 
-// Mock electron shell
-vi.mock("electron", () => ({
-  shell: {
-    openPath: vi.fn(() => Promise.resolve("")),
-  },
+// Mock child_process execFile
+vi.mock("node:child_process", () => ({
+  execFile: vi.fn((_cmd, _args, callback) => {
+    if (callback) callback(null);
+  }),
 }));
 
-import { getSystemSounds } from "./sound";
+import { execFile } from "node:child_process";
+import { getSystemSounds, playSound } from "./sound";
 
 describe("getSystemSounds", () => {
   it("should return an array of sound names", () => {
@@ -59,5 +60,27 @@ describe("getSystemSounds", () => {
     for (const commonSound of commonSounds) {
       expect(sounds).toContain(commonSound);
     }
+  });
+});
+
+describe("playSound", () => {
+  it("should call afplay with correct path", () => {
+    playSound("Basso");
+
+    expect(execFile).toHaveBeenCalledWith(
+      "afplay",
+      ["/System/Library/Sounds/Basso.aiff"],
+      expect.any(Function),
+    );
+  });
+
+  it("should handle different sound names", () => {
+    playSound("Glass");
+
+    expect(execFile).toHaveBeenCalledWith(
+      "afplay",
+      ["/System/Library/Sounds/Glass.aiff"],
+      expect.any(Function),
+    );
   });
 });

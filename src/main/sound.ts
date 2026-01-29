@@ -1,6 +1,6 @@
+import { execFile } from "node:child_process";
 import { readdirSync } from "node:fs";
 import { join } from "node:path";
-import { shell } from "electron";
 
 const SYSTEM_SOUNDS_PATH = "/System/Library/Sounds";
 
@@ -39,7 +39,9 @@ export function playSound(soundName: string): void {
   const soundPath = join(SYSTEM_SOUNDS_PATH, `${soundName}.aiff`);
 
   // Use afplay command to play the sound
-  shell.openPath(soundPath).catch((error) => {
-    console.error(`Failed to play sound: ${soundName}`, error);
+  execFile("afplay", [soundPath], (error) => {
+    if (error) {
+      console.error(`Failed to play sound: ${soundName}`, error);
+    }
   });
 }
