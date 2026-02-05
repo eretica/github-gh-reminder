@@ -8,6 +8,10 @@
     "type": "git",
     "url": "https://github.com/eretica/github_gh_reminder.git"
   },
+  "engines": {
+    "node": ">=20.0.0 <21.0.0",
+    "pnpm": ">=10.0.0"
+  },
   "scripts": {
     "dev": "electron-vite dev",
     "build": "electron-vite build",
